@@ -22,4 +22,5 @@ public class ArcadedbProperties {
     public static final String DEFAULT_USERNAME = "root";
 
     private Map<String, ConnectionProperties> connections;
+    private Boolean enabled = false;
 }

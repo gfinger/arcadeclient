@@ -2,6 +2,7 @@ debug: true
 org:
     makkiato:
         arcadedb:
+            enabled: true
             connections:
                 testdb:
                     host: localhost
