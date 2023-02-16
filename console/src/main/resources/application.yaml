@@ -3,6 +3,7 @@ org:
     makkiato:
         arcadedb:
             enabled: true
+            leader-preferred: true
             connections:
                 arcadedb0:
                     host: localhost

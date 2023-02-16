@@ -9,10 +9,12 @@ import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 public class ArcadedbClient {
+    private int nextReplicaServerIndex = 0;
+    private Map<String, ServerInfoResponse> serverInfoMap = new HashMap();
 
     @Getter
     private final Map<String, ConnectionProperties> connectionPropertiesMap;
@@ -21,10 +23,41 @@ public class ArcadedbClient {
         this.connectionPropertiesMap = connectionPropertiesMap;
     }
 
-    public Optional<ServerInfoResponse> serverInfo(String connectionName, String mode) throws ArcadeClientConfigurationException {
+    public ServerInfoResponse serverInfo(String connectionName, String mode) throws ArcadeClientConfigurationException {
         ConnectionProperties connectionProperties = getConnectionPropertiesFor(connectionName);
         WebClient webClient = createWebClient(connectionProperties);
-        return Optional.ofNullable(new ServerInfoExchange(mode, webClient).exchange().block());
+        return new ServerInfoExchange(mode, webClient).exchange().block();
+    }
+
+    public ConnectionProperties getPreferredConnectionPropertiesFor(String connectionName, Boolean reload) throws ArcadeClientConfigurationException {
+        var connectionProperties = getConnectionPropertiesFor(connectionName);
+        var serverInfo = serverInfoMap.get(connectionName);
+        if(reload || serverInfoMap.get(connectionName)== null) {
+            serverInfo = serverInfo(connectionName, "cluster");
+            serverInfoMap.put(connectionName, serverInfo);
+        }
+        if(serverInfo == null || serverInfo.ha() == null) {
+            return connectionProperties;
+        }
+        if(connectionProperties.getLeaderPreferred()) {
+            var leaderAddress = serverInfo.ha().leaderAddress();
+            var indexOfColon = leaderAddress.indexOf(':');
+            connectionProperties.setHost(leaderAddress.substring(0,indexOfColon));
+            connectionProperties.setPort(Integer.parseInt(leaderAddress.substring(indexOfColon+1)));
+            return connectionProperties;
+        }
+        var replicaAddresses = serverInfo.ha().replicaAddresses();
+        if(replicaAddresses == null || replicaAddresses.isEmpty()) {
+            return connectionProperties;
+        } else {
+            var serverEntries = replicaAddresses.split(",");
+            var selectedServer = serverEntries[nextReplicaServerIndex];
+            nextReplicaServerIndex = (nextReplicaServerIndex + 1) % serverEntries.length;
+            var indexOfColon = selectedServer.indexOf(':');
+            connectionProperties.setHost(selectedServer.substring(0, indexOfColon));
+            connectionProperties.setPort(Integer.parseInt(selectedServer.substring(indexOfColon + 1)));
+            return connectionProperties;
+        }
     }
 
     public ConnectionProperties getConnectionPropertiesFor(String connectionName) throws ArcadeClientConfigurationException {
@@ -36,7 +69,7 @@ public class ArcadedbClient {
     }
 
     public ArcadedbConnection createConnectionFor(String connectionName) throws ArcadeClientConfigurationException {
-        ConnectionProperties connectionProperties = getConnectionPropertiesFor(connectionName);
+        ConnectionProperties connectionProperties = getPreferredConnectionPropertiesFor(connectionName, true);
         return new ArcadedbConnection(connectionName, createWebClient(connectionProperties));
     }
 

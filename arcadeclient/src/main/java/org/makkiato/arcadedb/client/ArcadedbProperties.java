@@ -13,6 +13,7 @@ public class ArcadedbProperties {
     public static class ConnectionProperties {
         private Integer port = Integer.valueOf(DEFAULT_PORT);
         private String host = DEFAULT_HOST;
+        private Boolean leaderPreferred = false;
         private String username = DEFAULT_USERNAME;
         private String password = "";
     }
