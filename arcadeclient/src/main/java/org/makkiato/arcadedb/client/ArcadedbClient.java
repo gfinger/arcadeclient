@@ -1,9 +1,10 @@
 package org.makkiato.arcadedb.client;
 
+import lombok.Getter;
 import org.makkiato.arcadedb.client.ArcadedbProperties.ConnectionProperties;
 import org.makkiato.arcadedb.client.exception.ArcadeClientConfigurationException;
-import org.makkiato.arcadedb.client.httpexchange.DbExistsExchange;
-import org.makkiato.arcadedb.client.httpexchange.ServerExchange;
+import org.makkiato.arcadedb.client.http.request.ServerInfoExchange;
+import org.makkiato.arcadedb.client.http.response.ServerInfoResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -13,33 +14,30 @@ import java.util.Optional;
 
 public class ArcadedbClient {
 
-    private final Map<String, ConnectionProperties> connections;
+    @Getter
+    private final Map<String, ConnectionProperties> connectionPropertiesMap;
 
-    public ArcadedbClient(Map<String, ConnectionProperties> connections) {
-        this.connections = connections;
+    public ArcadedbClient(Map<String, ConnectionProperties> connectionPropertiesMap) {
+        this.connectionPropertiesMap = connectionPropertiesMap;
     }
 
-    public Optional<ArcadedbConnection> open(String name) throws ArcadeClientConfigurationException {
-        ConnectionProperties connectionProperties = getConnectionProperties(name);
+    public Optional<ServerInfoResponse> serverInfo(String connectionName, String mode) throws ArcadeClientConfigurationException {
+        ConnectionProperties connectionProperties = getConnectionPropertiesFor(connectionName);
         WebClient webClient = createWebClient(connectionProperties);
-        var result = new ServerExchange("sql", String.format("open database %s", name), webClient)
-                .exchange().block().result();
-        return Optional.ofNullable(result.equalsIgnoreCase("ok") ?
-                createConnectionFor(name, connections.get(name)) : null);
+        return Optional.ofNullable(new ServerInfoExchange(mode, webClient).exchange().block());
     }
 
-    public ArcadedbConnection create(String name) {
-        return createConnectionFor(name, connections.get(name));
+    public ConnectionProperties getConnectionPropertiesFor(String connectionName) throws ArcadeClientConfigurationException {
+        var connectionProperties = connectionPropertiesMap.get(connectionName);
+        if (connectionProperties == null) {
+            throw new ArcadeClientConfigurationException(String.format("Missing configuration for database: %s", connectionName));
+        }
+        return connectionProperties;
     }
 
-    public Boolean exists(String name) throws ArcadeClientConfigurationException {
-        ConnectionProperties connectionProperties = getConnectionProperties(name);
-        WebClient webClient = createWebClient(connectionProperties);
-        return new DbExistsExchange(name, webClient).exchange().block().result();
-    }
-
-    ArcadedbConnection createConnectionFor(String dbName, ConnectionProperties connectionProperties) {
-        return new ArcadedbConnection(dbName, createWebClient(connectionProperties));
+    public ArcadedbConnection createConnectionFor(String connectionName) throws ArcadeClientConfigurationException {
+        ConnectionProperties connectionProperties = getConnectionPropertiesFor(connectionName);
+        return new ArcadedbConnection(connectionName, createWebClient(connectionProperties));
     }
 
     WebClient createWebClient(ConnectionProperties connectionProperties) {
@@ -53,13 +51,5 @@ public class ArcadedbClient {
                 .baseUrl(baseUrl)
                 .filter(ExchangeFilterFunctions.basicAuthentication(connectionProperties.getUsername(), connectionProperties.getPassword()))
                 .build();
-    }
-
-    ConnectionProperties getConnectionProperties(String name) throws ArcadeClientConfigurationException {
-        var connectionProperties = connections.get(name);
-        if (connectionProperties == null) {
-            throw new ArcadeClientConfigurationException(String.format("Missing configuration for database: %s", name));
-        }
-        return connectionProperties;
     }
 }

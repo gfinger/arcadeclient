@@ -1,11 +1,13 @@
-package org.makkiato.arcadedb.client.httpexchange;
+package org.makkiato.arcadedb.client.http.request;
 
+import org.makkiato.arcadedb.client.http.response.BooleanResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 public class DbExistsExchange implements Exchange<BooleanResponse> {
+
     private final String name;
     private final WebClient webClient;
 
@@ -17,7 +19,7 @@ public class DbExistsExchange implements Exchange<BooleanResponse> {
     @Override
     public Mono<BooleanResponse> exchange() {
         return webClient.get()
-                .uri(String.format("/%s/%s", "exists", name))
+                .uri(String.format("%s/%s", Exchange.BASEURL_EXISTS, name))
                 .accept(MediaType.APPLICATION_JSON)
                 .exchangeToMono(response -> {
                     if (response.statusCode().equals(HttpStatus.OK)) {

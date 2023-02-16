@@ -4,7 +4,7 @@ org:
         arcadedb:
             enabled: true
             connections:
-                testdb:
+                arcadedb0:
                     host: localhost
                     port: 2480
                     username: root

@@ -1,5 +1,6 @@
-package org.makkiato.arcadedb.client.httpexchange;
+package org.makkiato.arcadedb.client.http.request;
 
+import org.makkiato.arcadedb.client.http.response.CommandResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -20,9 +21,9 @@ public class CommandExchange implements Exchange<CommandResponse> {
 
     @Override
     public Mono<CommandResponse> exchange() {
-        var payload = new CommandPayload(language, command, "json");
+        var payload = new CommandPayload(language, command, SERIALIZER_JSON);
         return webClient.post()
-                .uri(String.format("/%s/%s", "command", name))
+                .uri(String.format("%s/%s", Exchange.BASEURL_COMMAND, name))
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(payload)
