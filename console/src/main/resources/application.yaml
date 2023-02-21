@@ -3,13 +3,13 @@ org:
     makkiato:
         arcadedb:
             enabled: true
-            leader-preferred: true
             connections:
                 arcadedb0:
                     host: localhost
                     port: 2480
                     username: root
                     password: playwithdata
+                    leader-preferred: true
 
 logging:   
     level:

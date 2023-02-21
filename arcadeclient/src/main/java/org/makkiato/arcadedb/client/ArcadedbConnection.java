@@ -1,83 +1,68 @@
 package org.makkiato.arcadedb.client;
 
-import lombok.Data;
-import org.makkiato.arcadedb.client.exception.ArcadeClientConfigurationException;
+import lombok.Getter;
 import org.makkiato.arcadedb.client.exception.ArcadeConnectionException;
-import org.makkiato.arcadedb.client.http.request.CommandExchange;
-import org.makkiato.arcadedb.client.http.request.DbExistsExchange;
-import org.makkiato.arcadedb.client.http.request.ServerExchange;
+import org.makkiato.arcadedb.client.http.request.*;
+import org.makkiato.arcadedb.client.http.response.EmptyResponse;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
+import java.time.Duration;
 import java.util.Map;
+import java.util.Optional;
 
-@Data
-public class ArcadedbConnection {
-    private final WebClient webClient;
-    private final String connectionName;
-    private String databaseName;
+/**
+ * Represents one session on the ArcadeDB.
+ * This class is not thread-safe!
+ */
+public class ArcadedbConnection implements AutoCloseable {
+    private static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(2);
+    private static final String ARCADEDB_SESSION_ID = "arcadedb-session-id";
+    @Getter
+    private final String databaseName;
+    private WebClient webClient;
+    private boolean isClosed = false;
 
-    ArcadedbConnection(String connectionName, WebClient webClient) {
-        this.connectionName = connectionName;
-        assert (webClient != null);
+    public ArcadedbConnection(String databaseName, WebClient webClient) {
+        this.databaseName = databaseName;
         this.webClient = webClient;
     }
 
-    public Boolean open(String databaseName) throws ArcadeConnectionException {
-        if (getDatabaseName() != null) {
-            throw new ArcadeConnectionException("Close the currently opened database first");
-        }
-        var result = new ServerExchange("sql", String.format("open database %s", databaseName), webClient)
-                .exchange().onErrorResume(ex ->
-                        ex instanceof WebClientResponseException ?
-                                Mono.error(new ArcadeConnectionException(ex.getMessage())) : Mono.error(ex)).block().result();
-        if (result.equalsIgnoreCase("ok")) {
-            setDatabaseName(databaseName);
-            return true;
-        }
-        return false;
+
+    public Flux<Map<String, String>> command(String command) throws ArcadeConnectionException {
+        return isClosed ? Flux.empty() : new CommandExchange("sql", command, databaseName, webClient)
+                .exchange().map(response -> response.result()).flatMapMany(Flux::fromArray);
     }
 
-    public Boolean create(String databaseName) {
-        if (databaseName == null) {
-            return false;
-        }
-        var result = new ServerExchange("sql", String.format("create database %s", databaseName), webClient)
-                .exchange().onErrorResume(ex ->
-                        ex instanceof WebClientResponseException ?
-                                Mono.error(new ArcadeConnectionException(ex.getMessage())) : Mono.error(ex)).block().result();
-        if (result.equalsIgnoreCase("ok")) {
-            setDatabaseName(databaseName);
-            return true;
-        }
-        return false;
+
+    public void close() {
+        this.isClosed = true;
+        new ServerExchange("sql", String.format("close database %s", databaseName), webClient)
+                .exchange().map(response -> response.result().equalsIgnoreCase("ok"))
+                .block(CONNECTION_TIMEOUT);
     }
 
-    public Boolean exists(String databaseName) throws ArcadeClientConfigurationException {
-        return new DbExistsExchange(databaseName, webClient).exchange().block().result();
+    public Boolean beginTransaction() {
+        Optional<String> sessionId = new BeginTAExchange(databaseName, webClient).exchange()
+                .map(EmptyResponse::headers)
+                .filter(header -> header.containsKey(ARCADEDB_SESSION_ID))
+                .map(header -> header.get(ARCADEDB_SESSION_ID))
+                .filter(item -> !item.isEmpty())
+                .map(item -> item.get(0))
+                .blockOptional(CONNECTION_TIMEOUT);
+        webClient = webClient.mutate().defaultHeader(ARCADEDB_SESSION_ID, sessionId.orElse("")).build();
+        return sessionId.isPresent();
     }
 
-    public Boolean close() {
-        if (getDatabaseName() == null) {
-            return true;
-        }
-        var result = new ServerExchange("sql", String.format("close database %s", getDatabaseName()), webClient)
-                .exchange().block().result();
-        if (result.equalsIgnoreCase("ok")) {
-            setDatabaseName(null);
-            return true;
-        }
-        return false;
+    public Boolean commitTransaction() {
+        Optional<EmptyResponse> response = new CommitTAExchange(databaseName, webClient).exchange().blockOptional(CONNECTION_TIMEOUT);
+        webClient = webClient.mutate().defaultHeader(ARCADEDB_SESSION_ID, "").build();
+        return response.isPresent();
     }
 
-    public Map<String, String>[] command(String command) throws ArcadeConnectionException {
-        if (getDatabaseName() == null) {
-            throw new ArcadeConnectionException("Open or create a database first");
-        }
-        return new CommandExchange("sql", command, getDatabaseName(), webClient)
-                .exchange().onErrorResume(ex ->
-                        ex instanceof WebClientResponseException ?
-                                Mono.error(new ArcadeConnectionException(ex.getMessage())) : Mono.error(ex)).block().result();
+    public Boolean rollbackTransaction() {
+        Optional<EmptyResponse> response = new RollbackTAExchange(databaseName, webClient).exchange().blockOptional(CONNECTION_TIMEOUT);
+        webClient = webClient.mutate().defaultHeader(ARCADEDB_SESSION_ID, "").build();
+        return response.isPresent();
     }
 }

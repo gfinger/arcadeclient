@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>org.makkiato.arcadedb.client</groupId>
 	<artifactId>console</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<name>Console</name>
 	<description>Console using Spring Boot client for ArcadeDB</description>
 	<properties>

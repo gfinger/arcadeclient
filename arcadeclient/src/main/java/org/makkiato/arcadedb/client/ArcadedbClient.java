@@ -13,6 +13,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ArcadedbClient {
+    private static final String PATH_SEGMENT_API = "/api";
+    private static final String PATH_SEGMENT_VERSION = "/v1";
+    private static final String SCHEME_HTTP = "http";
     private int nextReplicaServerIndex = 0;
     private Map<String, ServerInfoResponse> serverInfoMap = new HashMap();
 
@@ -68,18 +71,18 @@ public class ArcadedbClient {
         return connectionProperties;
     }
 
-    public ArcadedbConnection createConnectionFor(String connectionName) throws ArcadeClientConfigurationException {
+    public ArcadedbFactory createFactoryFor(String connectionName) throws ArcadeClientConfigurationException {
         ConnectionProperties connectionProperties = getPreferredConnectionPropertiesFor(connectionName, true);
-        return new ArcadedbConnection(connectionName, createWebClient(connectionProperties));
+        return new ArcadedbFactory(connectionName, createWebClient(connectionProperties));
     }
 
     WebClient createWebClient(ConnectionProperties connectionProperties) {
         assert (connectionProperties != null);
         String baseUrl = UriComponentsBuilder.newInstance()
-                .scheme("http")
+                .scheme(SCHEME_HTTP)
                 .host(connectionProperties.getHost())
                 .port(connectionProperties.getPort())
-                .path("/api/v1").toUriString();
+                .path(PATH_SEGMENT_API + PATH_SEGMENT_VERSION).toUriString();
         return WebClient.builder()
                 .baseUrl(baseUrl)
                 .filter(ExchangeFilterFunctions.basicAuthentication(connectionProperties.getUsername(), connectionProperties.getPassword()))

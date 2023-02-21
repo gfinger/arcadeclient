@@ -2,20 +2,22 @@ package org.makkiato.arcadedb.console.shell;
 
 import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStyle;
-import org.makkiato.arcadedb.client.ArcadedbConnection;
 import org.springframework.context.event.EventListener;
 import org.springframework.shell.jline.PromptProvider;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ConsolePromptProvider implements PromptProvider {
-    ArcadedbConnection connection;
+    String databaseName;
+    String serverName;
+
     @Override
     public AttributedString getPrompt() {
-        if(connection != null && connection.getConnectionName() != null) {
-            var prompt = new AttributedString(String.format("%s>", connection.getConnectionName()), AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN));
-            if(connection.getDatabaseName() != null) {
-                prompt = AttributedString.join(AttributedString.fromAnsi(""), prompt, new AttributedString(String.format("%s>", connection.getDatabaseName()), AttributedStyle.DEFAULT.foreground(AttributedStyle.MAGENTA)));
+        if (serverName != null) {
+            var prompt = new AttributedString(String.format("%s> ", serverName), AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN));
+            if (databaseName != null) {
+                prompt = AttributedString.join(AttributedString.fromAnsi(""),
+                        prompt, new AttributedString(String.format("%s> ", databaseName), AttributedStyle.DEFAULT.foreground(AttributedStyle.MAGENTA)));
             }
             return prompt;
         } else {
@@ -24,7 +26,12 @@ public class ConsolePromptProvider implements PromptProvider {
     }
 
     @EventListener
-    public void handle(ConnectionUpdateEvent event) {
-        this.connection = event.getConnection();
+    public void handle(DatabaseUpdateEvent event) {
+        this.databaseName = event.getDatabaseName();
+    }
+
+    @EventListener
+    public void handle(ServerUpdateEvent event) {
+        this.serverName = event.getServerName();
     }
 }
