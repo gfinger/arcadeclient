@@ -16,6 +16,8 @@ public class ArcadedbProperties {
     public static final int DEFAULT_PORT = 2480;
     public static final String DEFAULT_HOST = "localhost";
     public static final String DEFAULT_USERNAME = "root";
+    public static final Integer MAX_SERVER_INFO_RETRIES = 3;
+    public static final Integer CONNECTION_TIMEOUT_SECS = 3;
     /**
      * A map of configuration properties required to connect to an ArcadeDB server or cluster.
      * The name of configuration can be chosen freely.
@@ -49,5 +51,7 @@ public class ArcadedbProperties {
          * Password of user.
          */
         private String password = "";
+        private Integer maxServerInfoRetries = MAX_SERVER_INFO_RETRIES;
+        private Integer connectionTimeoutSecs = CONNECTION_TIMEOUT_SECS;
     }
 }

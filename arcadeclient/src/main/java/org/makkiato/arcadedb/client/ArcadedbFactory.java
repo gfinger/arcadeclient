@@ -1,28 +1,26 @@
 package org.makkiato.arcadedb.client;
 
 import lombok.Getter;
-import org.makkiato.arcadedb.client.exception.ArcadeClientConfigurationException;
-import org.makkiato.arcadedb.client.exception.ArcadeConnectionException;
+import org.makkiato.arcadedb.client.exception.client.ArcadeClientConfigurationException;
 import org.makkiato.arcadedb.client.http.request.DbExistsExchange;
 import org.makkiato.arcadedb.client.http.request.ServerExchange;
 import org.makkiato.arcadedb.client.http.response.BooleanResponse;
 import org.makkiato.arcadedb.client.http.response.StatusResponse;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 
 public class ArcadedbFactory {
-    private final WebClient webClient;
+    private final ArcadedbClient.WebClientSupplier webClientSupplier;
     @Getter
     private final String name;
 
-    ArcadedbFactory(String name, WebClient webClient) {
+    ArcadedbFactory(String name, ArcadedbClient.WebClientSupplier webClientSupplier) {
         this.name = name;
-        assert (webClient != null);
-        this.webClient = webClient;
+        this.webClientSupplier = webClientSupplier;
     }
 
-    public Mono<ArcadedbConnection> open(String databaseName) throws ArcadeConnectionException {
+    public Mono<ArcadedbConnection> open(String databaseName) {
+        var webClient = webClientSupplier.get();
         return new ServerExchange("sql", String.format("open database %s", databaseName), webClient)
                 .exchange()
                 .map(StatusResponse::result)
@@ -31,6 +29,7 @@ public class ArcadedbFactory {
     }
 
     public Mono<ArcadedbConnection> create(String databaseName) {
+        var webClient = webClientSupplier.get();
         return new ServerExchange("sql", String.format("create database %s", databaseName), webClient)
                 .exchange()
                 .map(StatusResponse::result)
@@ -39,6 +38,6 @@ public class ArcadedbFactory {
     }
 
     public Mono<Boolean> exists(String databaseName) throws ArcadeClientConfigurationException {
-        return new DbExistsExchange(databaseName, webClient).exchange().map(BooleanResponse::result);
+        return new DbExistsExchange(databaseName, webClientSupplier.get()).exchange().map(BooleanResponse::result);
     }
 }

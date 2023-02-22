@@ -123,7 +123,7 @@ public class ShellCommands extends AbstractShellComponent {
 
     private void setConnection(ArcadedbConnection connection) {
         this.connection = connection;
-        getPublisher().publishEvent(new DatabaseUpdateEvent(this, connection != null ? connection.getDatabaseName(): null));
+        getPublisher().publishEvent(new DatabaseUpdateEvent(this, connection != null ? connection.getDatabaseName() : null));
     }
 
     public ArcadedbFactory getArcadedbFactory() {

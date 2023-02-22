@@ -1,7 +1,6 @@
 package org.makkiato.arcadedb.client;
 
 import lombok.Getter;
-import org.makkiato.arcadedb.client.exception.ArcadeConnectionException;
 import org.makkiato.arcadedb.client.http.request.*;
 import org.makkiato.arcadedb.client.http.response.EmptyResponse;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -29,7 +28,7 @@ public class ArcadedbConnection implements AutoCloseable {
     }
 
 
-    public Flux<Map<String, String>> command(String command) throws ArcadeConnectionException {
+    public Flux<Map<String, String>> command(String command) {
         return isClosed ? Flux.empty() : new CommandExchange("sql", command, databaseName, webClient)
                 .exchange().map(response -> response.result()).flatMapMany(Flux::fromArray);
     }
