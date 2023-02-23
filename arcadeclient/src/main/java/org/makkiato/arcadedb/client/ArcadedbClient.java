@@ -1,6 +1,7 @@
 package org.makkiato.arcadedb.client;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.makkiato.arcadedb.client.ArcadedbProperties.ConnectionProperties;
 import org.makkiato.arcadedb.client.exception.client.ArcadeClientConfigurationException;
 import org.makkiato.arcadedb.client.exception.server.*;
@@ -8,13 +9,9 @@ import org.makkiato.arcadedb.client.http.request.ServerInfoExchange;
 import org.makkiato.arcadedb.client.http.response.ErrorResponse;
 import org.makkiato.arcadedb.client.http.response.ServerInfoResponse;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.web.reactive.function.client.ClientResponse;
-import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
-import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.*;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
-import reactor.util.retry.Retry;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -22,6 +19,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+@Slf4j
 public class ArcadedbClient {
     private static final String PATH_SEGMENT_API = "/api";
     private static final String PATH_SEGMENT_VERSION = "/v1";
@@ -38,6 +36,7 @@ public class ArcadedbClient {
         var status = response.statusCode();
         if (!status.is2xxSuccessful()) {
             response.bodyToMono(ErrorResponse.class).blockOptional(Duration.ofSeconds(5)).ifPresent(error -> {
+                log.error(String.format("ArcadeDB error: %s", error));
                 if (error.exception().equals(ServerIsNotTheLeaderException.class.getName())) {
                     final int sep = error.detail().lastIndexOf('.');
                     throw new ServerIsNotTheLeaderException(sep > -1 ? error.detail().substring(0, sep) :
@@ -75,7 +74,9 @@ public class ArcadedbClient {
     public Optional<ServerInfoResponse> serverInfo(String connectionName, String mode) {
         ConnectionProperties connectionProperties = getConnectionPropertiesFor(connectionName);
         WebClient webClient = getWebClientFor(connectionProperties);
-        return new ServerInfoExchange(mode, webClient).exchange().retryWhen(Retry.max(connectionProperties.getMaxServerInfoRetries())).blockOptional(Duration.ofSeconds(connectionProperties.getConnectionTimeoutSecs()));
+        return new ServerInfoExchange(mode, webClient).exchange()
+                .onErrorResume(WebClientRequestException.class, e -> Mono.empty())
+                .blockOptional(Duration.ofSeconds(connectionProperties.getConnectionTimeoutSecs()));
     }
 
     public ServerSpec[] getServerSpecs(String connectionName) {
@@ -84,7 +85,7 @@ public class ArcadedbClient {
             if (serverInfo.ha() != null) {
                 if (connectionProperties.getLeaderPreferred()) {
                     var leaderAddress = serverInfo.ha().leaderAddress();
-                    if(leaderAddress != null) {
+                    if (leaderAddress != null) {
                         var indexOfColon = leaderAddress.indexOf(':');
                         return new ServerSpec[]{new ServerSpec(leaderAddress.substring(0, indexOfColon),
                                 Integer.parseInt(leaderAddress.substring(indexOfColon + 1)))};
@@ -122,7 +123,7 @@ public class ArcadedbClient {
                         connectionProperties.getUsername(), connectionProperties.getPassword())));
     }
 
-    @Cacheable("web-client")
+    @Cacheable("web-clients")
     public WebClient[] getWebClientsFor(ServerSpec[] serverSpecs, String username, String password) {
         var errorResponseFilter =
                 ExchangeFilterFunction.ofResponseProcessor(ArcadedbClient::exchangeFilterResponseProcessor);
@@ -142,6 +143,7 @@ public class ArcadedbClient {
         }).toArray(WebClient[]::new);
     }
 
+    @Cacheable("web-client")
     public WebClient getWebClientFor(ConnectionProperties connectionProperties) {
         var errorResponseFilter =
                 ExchangeFilterFunction.ofResponseProcessor(ArcadedbClient::exchangeFilterResponseProcessor);

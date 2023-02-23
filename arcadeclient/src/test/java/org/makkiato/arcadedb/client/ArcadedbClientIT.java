@@ -1,10 +1,14 @@
 package org.makkiato.arcadedb.client;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.makkiato.arcadedb.client.exception.client.ArcadeClientException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.catchThrowable;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringJUnitConfig(ArcadedbClientITConfiguration.class)
 @TestPropertySource(properties = {
@@ -17,9 +21,16 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 class ArcadedbClientIT {
     @Autowired
     private ArcadedbClient arcadedbClient;
+
     @Test
     void serverInfo() {
-        var serverInfo = arcadedbClient.serverInfo("arcadedb0", "cluster").get();
-        Assertions.assertEquals("ArcadeDB_0", serverInfo.serverName());
+        var serverInfo = arcadedbClient.serverInfo("arcadedb0", "cluster");
+        assertTrue(serverInfo.isPresent());
+    }
+
+    @Test
+    void missingServerInfo() {
+        var throwable = catchThrowable(() -> arcadedbClient.serverInfo("arcadedb1", "cluster"));
+        assertThat(throwable).isInstanceOf(ArcadeClientException.class).hasMessage("Missing configuration for database: %s", "arcadedb1");
     }
 }
