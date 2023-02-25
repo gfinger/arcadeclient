@@ -30,6 +30,11 @@ public class DuplicatedKeyException extends ArcadeDBException {
     this.currentIndexedRID = currentIndexedRID;
   }
 
+  public DuplicatedKeyException() {
+    super("Duplicated key");
+    this.indexName = this.keys = this.currentIndexedRID = null;
+  }
+
   public String getIndexName() {
     return indexName;
   }

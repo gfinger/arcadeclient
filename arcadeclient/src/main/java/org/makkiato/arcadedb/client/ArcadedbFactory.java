@@ -37,6 +37,13 @@ public class ArcadedbFactory {
                 .map(response -> new ArcadedbConnection(databaseName, webClient));
     }
 
+    public Mono<String> drop(String databaseName) {
+        var webClient = webClientSupplier.get();
+        return new ServerExchange("sql", String.format("drop database %s", databaseName), webClient)
+                .exchange()
+                .map(StatusResponse::result);
+    }
+
     public Mono<Boolean> exists(String databaseName) throws ArcadeClientConfigurationException {
         return new DbExistsExchange(databaseName, webClientSupplier.get()).exchange().map(BooleanResponse::result);
     }

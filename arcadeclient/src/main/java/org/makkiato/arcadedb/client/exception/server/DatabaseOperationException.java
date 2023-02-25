@@ -19,11 +19,11 @@
 package org.makkiato.arcadedb.client.exception.server;
 
 public class DatabaseOperationException extends ArcadeDBException {
-  public DatabaseOperationException(final String s) {
-    super(s);
+  public DatabaseOperationException(String detail) {
+    super(detail);
   }
 
-  public DatabaseOperationException(final String s, final Throwable e) {
-    super(s, e);
+  public DatabaseOperationException(String detail, String exceptionArgs) {
+    super(detail, exceptionArgs);
   }
 }

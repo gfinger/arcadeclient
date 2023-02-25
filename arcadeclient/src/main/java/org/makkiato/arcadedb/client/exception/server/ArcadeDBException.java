@@ -20,15 +20,25 @@ package org.makkiato.arcadedb.client.exception.server;
 
 public class ArcadeDBException extends RuntimeException {
 
+  private final String exceptionArgs;
+
   public ArcadeDBException(final String message) {
     super(message);
+    this.exceptionArgs = null;
+  }
+
+  public ArcadeDBException(final String message, final String exceptionArgs) {
+    super(message);
+    this.exceptionArgs = exceptionArgs;
   }
 
   public ArcadeDBException(final String message, final Throwable cause) {
     super(message, cause);
+    this.exceptionArgs = null;
   }
 
   public ArcadeDBException(final Throwable cause) {
     super(cause);
+    this.exceptionArgs = null;
   }
 }

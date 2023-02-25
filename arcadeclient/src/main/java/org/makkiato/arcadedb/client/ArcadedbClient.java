@@ -35,37 +35,44 @@ public class ArcadedbClient {
     private static Mono<ClientResponse> exchangeFilterResponseProcessor(ClientResponse response) {
         var status = response.statusCode();
         if (!status.is2xxSuccessful()) {
-            response.bodyToMono(ErrorResponse.class).blockOptional(Duration.ofSeconds(5)).ifPresent(error -> {
+            return response.bodyToMono(ErrorResponse.class).flatMap(error -> {
                 log.error(String.format("ArcadeDB error: %s", error));
-                if (error.exception().equals(ServerIsNotTheLeaderException.class.getName())) {
-                    final int sep = error.detail().lastIndexOf('.');
-                    throw new ServerIsNotTheLeaderException(sep > -1 ? error.detail().substring(0, sep) :
-                            error.detail(), error.exceptionArgs());
-                } else if (error.exception().equals(QuorumNotReachedException.class.getName())) {
-                    throw new QuorumNotReachedException(error.detail());
-                } else if (error.exception().equals(DuplicatedKeyException.class.getName()) && error.exceptionArgs() != null) {
-                    final String[] exceptionArgsParts = error.exceptionArgs().split("\\|");
-                    throw new DuplicatedKeyException(exceptionArgsParts[0], exceptionArgsParts[1],
-                            exceptionArgsParts[2]);
-                } else if (error.exception().equals(ConcurrentModificationException.class.getName())) {
-                    throw new ConcurrentModificationException(error.detail());
-                } else if (error.exception().equals(TransactionException.class.getName())) {
-                    throw new TransactionException(error.detail());
-                } else if (error.exception().equals(TimeoutException.class.getName())) {
-                    throw new TimeoutException(error.detail());
-                } else if (error.exception().equals(SchemaException.class.getName())) {
-                    throw new SchemaException(error.detail());
-                } else if (error.exception().equals(NoSuchElementException.class.getName())) {
-                    throw new NoSuchElementException(error.detail());
-                } else if (error.exception().equals(SecurityException.class.getName())) {
-                    throw new SecurityException(error.detail());
-                } else if (error.exception().equals("com.arcadedb.server.security.ServerSecurityException")) {
-                    throw new SecurityException(error.detail());
-                } else {
-                    throw new RemoteException(String.format("Error on executing remote operation %s", error));
-                }
+                return switch (error.getException()) {
+                    case "com.arcadedb.network.binary.ServerIsNotTheLeaderException" -> {
+                        final int sep = error.getError().lastIndexOf('.');
+                        yield Mono.error(new ServerIsNotTheLeaderException(sep > -1 ? error.getError().substring(0, sep) :
+                                error.getError(), error.getExceptionArgs()));
+                    }
+                    case "com.arcadedb.network.binary.QuorumNotReachedException" ->
+                            Mono.error(new QuorumNotReachedException(error.getError()));
+                    case "com.arcadedb.exception.DuplicatedKeyException" -> {
+                        final String[] exceptionArgsParts = error.getExceptionArgs().split("\\|");
+                        yield Mono.error(exceptionArgsParts != null ? new DuplicatedKeyException(exceptionArgsParts[0], exceptionArgsParts[1],
+                                exceptionArgsParts[2]) : new DuplicatedKeyException());
+                    }
+                    case "com.arcadedb.exception.ConcurrentModificationException" ->
+                            Mono.error(new ConcurrentModificationException(error.getError()));
+                    case "com.arcadedb.exception.TransactionException" ->
+                            Mono.error(new TransactionException(error.getError()));
+                    case "com.arcadedb.exception.TimeoutException" ->
+                            Mono.error(new TimeoutException(error.getError()));
+                    case "com.arcadedb.exception.SchemaException" ->
+                            Mono.error(new SchemaException(error.getError()));
+                    case "java.util.NoSuchElementException", "com.arcadedb.server.security.ServerSecurityException" ->
+                            Mono.error(new NoSuchElementException(error.getError()));
+                    case "java.lang.SecurityException" ->
+                            Mono.error(new SecurityException(error.getError()));
+                    case "com.arcadedb.query.sql.parser.ParseException" ->
+                            Mono.error(new ParseException(error.getDetail()));
+                    case "com.arcadedb.exception.DatabaseOperationException" ->
+                        Mono.error(new DatabaseOperationException(error.getDetail()));
+                    case "java.lang.IllegalArgumentException" ->
+                        Mono.error(new IllegalArgumentException(error.getDetail()));
+                    default ->
+                        Mono.error(new RemoteException(String.format("Error on executing remote operation %s",
+                                error)));
+                };
             });
-            return response.createError();
         }
         return Mono.just(response);
     }
@@ -75,7 +82,6 @@ public class ArcadedbClient {
         ConnectionProperties connectionProperties = getConnectionPropertiesFor(connectionName);
         WebClient webClient = getWebClientFor(connectionProperties);
         return new ServerInfoExchange(mode, webClient).exchange()
-                .onErrorResume(WebClientRequestException.class, e -> Mono.empty())
                 .blockOptional(Duration.ofSeconds(connectionProperties.getConnectionTimeoutSecs()));
     }
 
@@ -123,7 +129,6 @@ public class ArcadedbClient {
                         connectionProperties.getUsername(), connectionProperties.getPassword())));
     }
 
-    @Cacheable("web-clients")
     public WebClient[] getWebClientsFor(ServerSpec[] serverSpecs, String username, String password) {
         var errorResponseFilter =
                 ExchangeFilterFunction.ofResponseProcessor(ArcadedbClient::exchangeFilterResponseProcessor);
@@ -143,7 +148,6 @@ public class ArcadedbClient {
         }).toArray(WebClient[]::new);
     }
 
-    @Cacheable("web-client")
     public WebClient getWebClientFor(ConnectionProperties connectionProperties) {
         var errorResponseFilter =
                 ExchangeFilterFunction.ofResponseProcessor(ArcadedbClient::exchangeFilterResponseProcessor);
