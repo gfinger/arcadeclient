@@ -5,7 +5,7 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import org.junit.jupiter.api.*;
-import org.makkiato.arcadedb.client.exception.server.ParseException;
+import org.makkiato.arcadedb.client.exception.server.*;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
@@ -55,6 +55,12 @@ public class ArcadedbConnectionIT {
     void createVertexType() {
         assertThat(connection.command("create vertex type Customer").blockFirst()).contains(entry("operation",
                 "create vertex type"), entry("typeName", "Customer"));
+        assertThatThrownBy(() -> connection.command("create vertex type Customer").blockFirst())
+                .isInstanceOf(CommandExecutionException.class).hasMessageContaining("already exists");
+        assertThat(logWatcher.list.stream()
+                .filter(event -> event.getLevel()
+                        .equals(Level.ERROR) && event.getFormattedMessage().contains("already exists")))
+                .hasSize(1);
     }
 
     @Test
@@ -68,4 +74,52 @@ public class ArcadedbConnectionIT {
                 .hasSize(1);
     }
 
+    @Test
+    @Order(3)
+    void createProperty() {
+        assertThat(connection.command("create property Customer.name String (mandatory true, notnull true)").blockFirst()).contains(entry("operation",
+                "create property"), entry("typeName", "Customer"));
+        assertThatThrownBy(() -> connection.command("create property Customer.name String (mandatory true, notnull " +
+                "true)").blockFirst())
+                .isInstanceOf(CommandExecutionException.class).hasMessageContaining("already exists");
+        assertThat(logWatcher.list.stream()
+                .filter(event -> event.getLevel()
+                        .equals(Level.ERROR) && event.getFormattedMessage().contains("already exists")))
+                .hasSize(1);
+    }
+
+    @Test
+    @Order(4)
+    void createIndex() {
+        assertThat(connection.command("create index on Customer (name) unique").blockFirst()).contains(entry(
+                "operation",
+                "create index"), entry("name", "Customer[name]"), entry("type", "LSM_TREE"), entry("totalIndexed", "0"
+        ));
+    }
+
+    @Test
+    @Order(5)
+    void insert() {
+        assertThat(connection.command("insert into Customer set name = 'Tester'").blockFirst())
+                .contains(entry("@rid", "#1:0"),entry("@type","Customer"), entry("@cat", "v"), entry("@out", "0"),
+                        entry("@in", "0"), entry("name", "Tester"));
+
+        assertThatThrownBy(() ->connection.command("insert into Person set name = 'Tester'").blockFirst())
+                .isInstanceOf(SchemaException.class).hasMessageContaining("was not found");
+        assertThat(logWatcher.list.stream()
+                .filter(event -> event.getLevel()
+                        .equals(Level.ERROR) && event.getFormattedMessage().contains("was not found")));
+
+        assertThatThrownBy(()->connection.command("insert into Customer set name = 'Tester'").blockFirst())
+                .isInstanceOf(DuplicatedKeyException.class).hasMessageContaining("Duplicated key");
+        assertThat(logWatcher.list.stream()
+                .filter(event -> event.getLevel()
+                        .equals(Level.ERROR) && event.getFormattedMessage().contains("Duplicated key")));
+
+        assertThatThrownBy(() ->connection.command("insert into Customer set name = null").blockFirst())
+                .isInstanceOf(ValidationException.class).hasMessageContaining("cannot be null");
+        assertThat(logWatcher.list.stream()
+                .filter(event -> event.getLevel()
+                        .equals(Level.ERROR) && event.getFormattedMessage().contains("cannot be null")));
+    }
 }

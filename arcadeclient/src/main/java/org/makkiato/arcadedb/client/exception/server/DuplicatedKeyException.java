@@ -23,15 +23,15 @@ public class DuplicatedKeyException extends ArcadeDBException {
   private final String keys;
   private final String currentIndexedRID;
 
-  public DuplicatedKeyException(final String indexName, final String keys, final String currentIndexedRID) {
-    super("Duplicated key " + keys + " found on index '" + indexName + "' already assigned to record " + currentIndexedRID);
+  public DuplicatedKeyException(final String detail, final String indexName, final String keys, final String currentIndexedRID) {
+    super(detail);
     this.indexName = indexName;
     this.keys = keys;
     this.currentIndexedRID = currentIndexedRID;
   }
 
-  public DuplicatedKeyException() {
-    super("Duplicated key");
+  public DuplicatedKeyException(String detail) {
+    super(detail);
     this.indexName = this.keys = this.currentIndexedRID = null;
   }
 

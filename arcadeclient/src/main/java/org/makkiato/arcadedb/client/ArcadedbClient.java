@@ -47,8 +47,9 @@ public class ArcadedbClient {
                             Mono.error(new QuorumNotReachedException(error.getError()));
                     case "com.arcadedb.exception.DuplicatedKeyException" -> {
                         final String[] exceptionArgsParts = error.getExceptionArgs().split("\\|");
-                        yield Mono.error(exceptionArgsParts != null ? new DuplicatedKeyException(exceptionArgsParts[0], exceptionArgsParts[1],
-                                exceptionArgsParts[2]) : new DuplicatedKeyException());
+                        yield Mono.error(exceptionArgsParts != null ? new DuplicatedKeyException(error.getDetail(),
+                                exceptionArgsParts[0], exceptionArgsParts[1], exceptionArgsParts[2]) :
+                                new DuplicatedKeyException(error.getDetail()));
                     }
                     case "com.arcadedb.exception.ConcurrentModificationException" ->
                             Mono.error(new ConcurrentModificationException(error.getError()));
@@ -57,7 +58,7 @@ public class ArcadedbClient {
                     case "com.arcadedb.exception.TimeoutException" ->
                             Mono.error(new TimeoutException(error.getError()));
                     case "com.arcadedb.exception.SchemaException" ->
-                            Mono.error(new SchemaException(error.getError()));
+                            Mono.error(new SchemaException(error.getDetail()));
                     case "java.util.NoSuchElementException", "com.arcadedb.server.security.ServerSecurityException" ->
                             Mono.error(new NoSuchElementException(error.getError()));
                     case "java.lang.SecurityException" ->
@@ -68,6 +69,10 @@ public class ArcadedbClient {
                         Mono.error(new DatabaseOperationException(error.getDetail()));
                     case "java.lang.IllegalArgumentException" ->
                         Mono.error(new IllegalArgumentException(error.getDetail()));
+                    case "com.arcadedb.exception.CommandExecutionException" ->
+                        Mono.error((new CommandExecutionException(error.getDetail())));
+                    case "com.arcadedb.exception.ValidationException" ->
+                        Mono.error(new ValidationException(error.getDetail()));
                     default ->
                         Mono.error(new RemoteException(String.format("Error on executing remote operation %s",
                                 error)));
