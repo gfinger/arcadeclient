@@ -3,8 +3,7 @@ package org.makkiato.arcadedb.console.shell;
 import org.makkiato.arcadedb.client.ArcadedbClient;
 import org.makkiato.arcadedb.client.ArcadedbConnection;
 import org.makkiato.arcadedb.client.ArcadedbFactory;
-import org.makkiato.arcadedb.client.exception.ArcadeClientConfigurationException;
-import org.makkiato.arcadedb.client.exception.ArcadeConnectionException;
+import org.makkiato.arcadedb.client.exception.client.ArcadeClientConfigurationException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.shell.Availability;
 import org.springframework.shell.component.SingleItemSelector;
@@ -68,7 +67,7 @@ public class ShellCommands extends AbstractShellComponent {
 
     @ShellMethodAvailability("connectionClosedAndFactoryAvailableCheck")
     @ShellMethod(value = "Open a database in ArcadeDB", group = "Server")
-    public String open(String dbName) throws ArcadeConnectionException {
+    public String open(String dbName) {
         setConnection(null);
         var connection = getArcadedbFactory().open(dbName).block(CONNECTION_TIMEOUT);
         setConnection(connection);
@@ -85,7 +84,7 @@ public class ShellCommands extends AbstractShellComponent {
 
     @ShellMethodAvailability("connectionAvailableCheck")
     @ShellMethod(value = "Send a command to ArcadeDB", group = "Database")
-    public String command() throws ArcadeConnectionException {
+    public String command() {
         StringInput component = new StringInput(getTerminal(), ">> ", "");
         component.setResourceLoader(getResourceLoader());
         component.setTemplateExecutor(getTemplateExecutor());
