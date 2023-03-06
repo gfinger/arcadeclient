@@ -1,5 +1,16 @@
 {
     "dockerComposeFile": "docker-compose.yaml",
     "service": "devcontainer",
-    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}"
+    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+    "customizations": {
+        "vscode": {
+            "settings": {
+
+            },
+            "extensions": [
+                "vscjava.vscode-java-pack",
+                "ms-azuretools.vscode-docker"
+            ]
+        }
+    }
 }
