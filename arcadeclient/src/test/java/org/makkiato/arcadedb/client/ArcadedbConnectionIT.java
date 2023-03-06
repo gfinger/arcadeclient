@@ -122,4 +122,23 @@ public class ArcadedbConnectionIT {
                 .filter(event -> event.getLevel()
                         .equals(Level.ERROR) && event.getFormattedMessage().contains("cannot be null")));
     }
+
+    @Test
+    @Order(6)
+    void delete() {
+        assertThat(connection.command("delete from Customer where name = 'Tester'").blockFirst())
+                .contains(entry("count", "1"));
+    }
+
+    @Test
+    @Order(7)
+    void drop() {
+        assertThat(connection.command("drop type Customer").blockFirst())
+                .contains(entry("operation", "drop type"), entry("typeName", "Customer"));
+        assertThatThrownBy(()->connection.command("drop type Customer").blockFirst())
+                .isInstanceOf(SchemaException.class).hasMessageContaining("was not found");
+        assertThat(logWatcher.list.stream()
+                .filter(event -> event.getLevel()
+                        .equals(Level.ERROR) && event.getFormattedMessage().contains("was not found")));
+    }
 }
