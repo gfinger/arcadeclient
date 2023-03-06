@@ -3,5 +3,8 @@ RUN apt-get update
 RUN apt-get install -y apt-utils build-essential sudo git wget zsh unzip curl
 RUN apt-get install -y openjdk-19-jdk
 RUN apt-get install -y maven
+RUN echo "JAVA_HOME=lib/jvm/java-1.19.0-openjdk-amd64" > /root/.bashrc
+
+
 
 
