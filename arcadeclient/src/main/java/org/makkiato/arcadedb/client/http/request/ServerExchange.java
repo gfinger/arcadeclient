@@ -20,7 +20,7 @@ public class ServerExchange implements Exchange<StatusResponse> {
 
     @Override
     public Mono<StatusResponse> exchange() {
-        var payload = new CommandPayload(language, command, SERIALIZER_JSON);
+        var payload = new CommandPayload(language, command, null, SERIALIZER_JSON);
         return webClient.post()
                 .uri(BASEURL_SERVER)
                 .accept(MediaType.APPLICATION_JSON)

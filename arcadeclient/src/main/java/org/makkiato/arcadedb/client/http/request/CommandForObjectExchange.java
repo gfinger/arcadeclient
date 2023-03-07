@@ -23,7 +23,7 @@ public class CommandForObjectExchange<T extends Response> implements Exchange<T>
 
     @Override
     public Mono<T> exchange() {
-        var payload = new CommandPayload(language, command, SERIALIZER_JSON);
+        var payload = new CommandPayload(language, command, null, SERIALIZER_JSON);
         return webClient.post()
                 .uri(String.format("%s/%s", BASEURL_COMMAND, name))
                 .accept(MediaType.APPLICATION_JSON)

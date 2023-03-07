@@ -13,26 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * SPDX-FileCopyrightText: 2021-present Arcade Data Ltd (info@arcadedata.com)
+ * SPDX-FileCopyrightText: 2023-present makkiato.de (info@makkiato.de)
  * SPDX-License-Identifier: Apache-2.0
  */
 package org.makkiato.arcadedb.client.exception.server;
-
-/**
- * Exception thrown when a constrain is violated.
- *
- * @author Luca Garulli (l.garulli@arcadedata.com)
- */
-public class ValidationException extends ArcadeDBException {
-  public ValidationException(final String message) {
-    super(message);
-  }
-
-  public ValidationException(final String message, final Throwable cause) {
-    super(message, cause);
-  }
-
-  public ValidationException(final Throwable cause) {
-    super(cause);
+public class ValidationException extends ArcadeServerException {
+  public ValidationException( String message, int status) {
+    super(message, status);
   }
 }

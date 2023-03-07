@@ -18,8 +18,8 @@
  */
 package org.makkiato.arcadedb.client.exception.server;
 
-public class DatabaseIsClosedException extends ArcadeServerException {
-  public DatabaseIsClosedException(final String message, int status) {
+public class SecurityException extends ArcadeServerException {
+  public SecurityException(final String message, int status) {
     super(message, status);
   }
 }

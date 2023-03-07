@@ -6,22 +6,21 @@ import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.util.Map;
+
 public class CommandExchange implements Exchange<CommandResponse> {
-    private final String language;
-    private final String command;
     private final String name;
     private final WebClient webClient;
+    private final CommandPayload payload;
 
-    public CommandExchange(String language, String command, String name, WebClient webClient) {
-        this.language = language;
-        this.command = command;
+    public CommandExchange(String language, String command, String name, Map<String, Object> params, WebClient webClient) {
         this.name = name;
         this.webClient = webClient;
+        this.payload = new CommandPayload(language, command, params, SERIALIZER_JSON);
     }
 
     @Override
     public Mono<CommandResponse> exchange() {
-        var payload = new CommandPayload(language, command, SERIALIZER_JSON);
         return webClient.post()
                 .uri(String.format("%s/%s", Exchange.BASEURL_COMMAND, name))
                 .accept(MediaType.APPLICATION_JSON)

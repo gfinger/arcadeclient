@@ -13,21 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * SPDX-FileCopyrightText: 2021-present Arcade Data Ltd (info@arcadedata.com)
+ * SPDX-FileCopyrightText: 2023-present makkiato.de (info@makkiato.de)
  * SPDX-License-Identifier: Apache-2.0
  */
 package org.makkiato.arcadedb.client.exception.server;
 
-public class CommandExecutionException extends ArcadeDBException {
-  public CommandExecutionException(final String message) {
-    super(message);
-  }
-
-  public CommandExecutionException(final String message, final Throwable cause) {
-    super(message, cause);
-  }
-
-  public CommandExecutionException(final Throwable cause) {
-    super(cause);
+public class CommandExecutionException extends ArcadeServerException {
+  public CommandExecutionException(String message, int status) {
+    super(message, status);
   }
 }

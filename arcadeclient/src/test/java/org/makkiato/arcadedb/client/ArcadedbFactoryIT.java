@@ -6,6 +6,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import org.junit.jupiter.api.*;
 import org.makkiato.arcadedb.client.exception.server.DatabaseOperationException;
+import org.makkiato.arcadedb.client.exception.server.IllegalArgumentException;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;

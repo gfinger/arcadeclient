@@ -13,26 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * SPDX-FileCopyrightText: 2021-present Arcade Data Ltd (info@arcadedata.com)
+ * SPDX-FileCopyrightText: 2023-present makkiato.de (info@makkiato.de)
  * SPDX-License-Identifier: Apache-2.0
  */
 package org.makkiato.arcadedb.client.exception.server;
 
 
-public class RecordNotFoundException extends ArcadeDBException {
-    private final String rid;
+public class RecordNotFoundException extends ArcadeServerException {
 
-    public RecordNotFoundException(final String s, final String rid) {
-        super(s);
-        this.rid = rid;
-    }
-
-    public RecordNotFoundException(final String s, final String rid, final Exception e) {
-        super(s, e);
-        this.rid = rid;
-    }
-
-    public String getRID() {
-        return rid;
+    public RecordNotFoundException( String message, int status) {
+        super(message, status);
     }
 }

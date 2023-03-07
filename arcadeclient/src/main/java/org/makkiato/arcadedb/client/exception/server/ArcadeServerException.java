@@ -13,32 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * SPDX-FileCopyrightText: 2021-present Arcade Data Ltd (info@arcadedata.com)
+ * SPDX-FileCopyrightText: 2023-present makkiato.de (info@makkiato.de)
  * SPDX-License-Identifier: Apache-2.0
  */
 package org.makkiato.arcadedb.client.exception.server;
 
-public class ArcadeDBException extends RuntimeException {
+public class ArcadeServerException extends RuntimeException {
 
-  private final String exceptionArgs;
+    private final int status;
 
-  public ArcadeDBException(final String message) {
-    super(message);
-    this.exceptionArgs = null;
-  }
-
-  public ArcadeDBException(final String message, final String exceptionArgs) {
-    super(message);
-    this.exceptionArgs = exceptionArgs;
-  }
-
-  public ArcadeDBException(final String message, final Throwable cause) {
-    super(message, cause);
-    this.exceptionArgs = null;
-  }
-
-  public ArcadeDBException(final Throwable cause) {
-    super(cause);
-    this.exceptionArgs = null;
-  }
+    public ArcadeServerException(String message, int status) {
+        super(message);
+        this.status = status;
+    }
 }

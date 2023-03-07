@@ -13,28 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * SPDX-FileCopyrightText: 2021-present Arcade Data Ltd (info@arcadedata.com)
+ * SPDX-FileCopyrightText: 2023-present makkiato.de (info@makkiato.de)
  * SPDX-License-Identifier: Apache-2.0
  */
 package org.makkiato.arcadedb.client.exception.server;
 
-public class RemoteException extends RuntimeException {
-  public RemoteException() {
-  }
-
-  public RemoteException(final String message) {
-    super(message);
-  }
-
-  public RemoteException(final String message, final Throwable cause) {
-    super(message, cause);
-  }
-
-  public RemoteException(final Throwable cause) {
-    super(cause);
-  }
-
-  public RemoteException(final String message, final Throwable cause, final boolean enableSuppression, final boolean writableStackTrace) {
-    super(message, cause, enableSuppression, writableStackTrace);
+public class RemoteException extends ArcadeServerException {
+  public RemoteException( String message, int status) {
+    super(message, status);
   }
 }

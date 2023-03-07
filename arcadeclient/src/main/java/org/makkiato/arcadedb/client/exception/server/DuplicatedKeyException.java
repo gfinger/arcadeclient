@@ -13,37 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * SPDX-FileCopyrightText: 2021-present Arcade Data Ltd (info@arcadedata.com)
+ * SPDX-FileCopyrightText: 2023-present makkiato.de (info@makkiato.de)
  * SPDX-License-Identifier: Apache-2.0
  */
 package org.makkiato.arcadedb.client.exception.server;
 
-public class DuplicatedKeyException extends ArcadeDBException {
-  private final String indexName;
-  private final String keys;
-  private final String currentIndexedRID;
+public class DuplicatedKeyException extends ArcadeServerException {
 
-  public DuplicatedKeyException(final String detail, final String indexName, final String keys, final String currentIndexedRID) {
-    super(detail);
-    this.indexName = indexName;
-    this.keys = keys;
-    this.currentIndexedRID = currentIndexedRID;
-  }
-
-  public DuplicatedKeyException(String detail) {
-    super(detail);
-    this.indexName = this.keys = this.currentIndexedRID = null;
-  }
-
-  public String getIndexName() {
-    return indexName;
-  }
-
-  public String getKeys() {
-    return keys;
-  }
-
-  public String getCurrentIndexedRID() {
-    return currentIndexedRID;
+  public DuplicatedKeyException(String detail, int status) {
+    super(detail, status);
   }
 }

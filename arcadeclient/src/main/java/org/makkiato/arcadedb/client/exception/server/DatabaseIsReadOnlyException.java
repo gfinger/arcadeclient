@@ -13,19 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * SPDX-FileCopyrightText: 2021-present Arcade Data Ltd (info@arcadedata.com)
+ * SPDX-FileCopyrightText: 2023-present makkiato.de (info@makkiato.de)
  * SPDX-License-Identifier: Apache-2.0
  */
 package org.makkiato.arcadedb.client.exception.server;
 
-import java.io.IOException;
-
-public class DatabaseIsReadOnlyException extends ArcadeDBException {
-  public DatabaseIsReadOnlyException(final String s) {
-    super(s);
-  }
-
-  public DatabaseIsReadOnlyException(final String s, final IOException e) {
-    super(s, e);
+public class DatabaseIsReadOnlyException extends ArcadeServerException {
+  public DatabaseIsReadOnlyException( String message, int status) {
+    super(message, status);
   }
 }

@@ -4,19 +4,23 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.makkiato.arcadedb.client.ArcadedbProperties.ConnectionProperties;
 import org.makkiato.arcadedb.client.exception.client.ArcadeClientConfigurationException;
+import org.makkiato.arcadedb.client.exception.server.IllegalArgumentException;
+import org.makkiato.arcadedb.client.exception.server.SecurityException;
 import org.makkiato.arcadedb.client.exception.server.*;
 import org.makkiato.arcadedb.client.http.request.ServerInfoExchange;
 import org.makkiato.arcadedb.client.http.response.ErrorResponse;
 import org.makkiato.arcadedb.client.http.response.ServerInfoResponse;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.web.reactive.function.client.*;
+import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Slf4j
@@ -38,44 +42,37 @@ public class ArcadedbClient {
             return response.bodyToMono(ErrorResponse.class).flatMap(error -> {
                 log.error(String.format("ArcadeDB error: %s", error));
                 return switch (error.getException()) {
-                    case "com.arcadedb.network.binary.ServerIsNotTheLeaderException" -> {
-                        final int sep = error.getError().lastIndexOf('.');
-                        yield Mono.error(new ServerIsNotTheLeaderException(sep > -1 ? error.getError().substring(0, sep) :
-                                error.getError(), error.getExceptionArgs()));
-                    }
+                    case "com.arcadedb.network.binary.ServerIsNotTheLeaderException" ->
+                            Mono.error(new ServerIsNotTheLeaderException(error.getError(), status.value()));
                     case "com.arcadedb.network.binary.QuorumNotReachedException" ->
-                            Mono.error(new QuorumNotReachedException(error.getError()));
-                    case "com.arcadedb.exception.DuplicatedKeyException" -> {
-                        final String[] exceptionArgsParts = error.getExceptionArgs().split("\\|");
-                        yield Mono.error(exceptionArgsParts != null ? new DuplicatedKeyException(error.getDetail(),
-                                exceptionArgsParts[0], exceptionArgsParts[1], exceptionArgsParts[2]) :
-                                new DuplicatedKeyException(error.getDetail()));
-                    }
+                            Mono.error(new QuorumNotReachedException(error.getError(), status.value()));
+                    case "com.arcadedb.exception.DuplicatedKeyException" ->
+                            Mono.error(new DuplicatedKeyException(error.getDetail(), status.value()));
                     case "com.arcadedb.exception.ConcurrentModificationException" ->
-                            Mono.error(new ConcurrentModificationException(error.getError()));
+                            Mono.error(new ConcurrentModificationException(error.getError(), status.value()));
                     case "com.arcadedb.exception.TransactionException" ->
-                            Mono.error(new TransactionException(error.getError()));
+                            Mono.error(new TransactionException(error.getError(), status.value()));
                     case "com.arcadedb.exception.TimeoutException" ->
-                            Mono.error(new TimeoutException(error.getError()));
+                            Mono.error(new TimeoutException(error.getError(), status.value()));
                     case "com.arcadedb.exception.SchemaException" ->
-                            Mono.error(new SchemaException(error.getDetail()));
+                            Mono.error(new SchemaException(error.getDetail(), status.value()));
                     case "java.util.NoSuchElementException", "com.arcadedb.server.security.ServerSecurityException" ->
-                            Mono.error(new NoSuchElementException(error.getError()));
+                            Mono.error(new NoSucheElementException(error.getError(), status.value()));
                     case "java.lang.SecurityException" ->
-                            Mono.error(new SecurityException(error.getError()));
+                            Mono.error(new SecurityException(error.getError(), status.value()));
                     case "com.arcadedb.query.sql.parser.ParseException" ->
-                            Mono.error(new ParseException(error.getDetail()));
+                            Mono.error(new ParseException(error.getDetail(), status.value()));
                     case "com.arcadedb.exception.DatabaseOperationException" ->
-                        Mono.error(new DatabaseOperationException(error.getDetail()));
+                            Mono.error(new DatabaseOperationException(error.getDetail(), status.value()));
                     case "java.lang.IllegalArgumentException" ->
-                        Mono.error(new IllegalArgumentException(error.getDetail()));
+                            Mono.error(new IllegalArgumentException(error.getDetail(), status.value()));
                     case "com.arcadedb.exception.CommandExecutionException" ->
-                        Mono.error((new CommandExecutionException(error.getDetail())));
+                            Mono.error((new CommandExecutionException(error.getDetail(), status.value())));
                     case "com.arcadedb.exception.ValidationException" ->
-                        Mono.error(new ValidationException(error.getDetail()));
+                            Mono.error(new ValidationException(error.getDetail(), status.value()));
                     default ->
-                        Mono.error(new RemoteException(String.format("Error on executing remote operation %s",
-                                error)));
+                            Mono.error(new RemoteException(String.format("Error on executing remote operation %s",
+                            error), status.value()));
                 };
             });
         }
@@ -84,14 +81,14 @@ public class ArcadedbClient {
 
     @Cacheable(value = "server-info")
     public Optional<ServerInfoResponse> serverInfo(String connectionName, String mode) {
-        ConnectionProperties connectionProperties = getConnectionPropertiesFor(connectionName);
-        WebClient webClient = getWebClientFor(connectionProperties);
+        var connectionProperties = getConnectionPropertiesFor(connectionName);
+        var webClient = getWebClientFor(connectionProperties);
         return new ServerInfoExchange(mode, webClient).exchange()
                 .blockOptional(Duration.ofSeconds(connectionProperties.getConnectionTimeoutSecs()));
     }
 
     public ServerSpec[] getServerSpecs(String connectionName) {
-        ConnectionProperties connectionProperties = getConnectionPropertiesFor(connectionName);
+        var connectionProperties = getConnectionPropertiesFor(connectionName);
         return serverInfo(connectionName, "cluster").map(serverInfo -> {
             if (serverInfo.ha() != null) {
                 if (connectionProperties.getLeaderPreferred()) {

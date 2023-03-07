@@ -13,17 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * SPDX-FileCopyrightText: 2021-present Arcade Data Ltd (info@arcadedata.com)
+ * SPDX-FileCopyrightText: 2023-present makkiato.de (info@makkiato.de)
  * SPDX-License-Identifier: Apache-2.0
  */
 package org.makkiato.arcadedb.client.exception.server;
 
-public class NeedRetryException extends ArcadeDBException {
-  public NeedRetryException(final String s) {
-    super(s);
-  }
-
-  public NeedRetryException(final String s, final Throwable e) {
-    super(s, e);
-  }
+public class NeedRetryException extends ArcadeServerException {
+    public NeedRetryException(String message, int status) {
+        super(message, status);
+    }
 }
