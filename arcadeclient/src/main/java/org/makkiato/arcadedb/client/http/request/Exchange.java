@@ -6,6 +6,7 @@ import reactor.core.publisher.Mono;
 public interface Exchange<T extends Response> {
     String BASEURL_SERVER = "/server";
     String BASEURL_COMMAND = "/command";
+    Object BASEURL_QUERY = "/query";
     String BASEURL_EXISTS = "/exists";
     String BASEURL_BEGIN = "/begin";
     String BASEURL_COMMIT = "/commit";

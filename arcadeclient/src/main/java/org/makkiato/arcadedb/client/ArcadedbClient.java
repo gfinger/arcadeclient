@@ -30,7 +30,6 @@ public class ArcadedbClient {
     private static final String SCHEME_HTTP = "http";
     @Getter
     private final Map<String, ConnectionProperties> connectionPropertiesMap;
-    private final int nextReplicaServerIndex = 0;
 
     public ArcadedbClient(Map<String, ConnectionProperties> connectionPropertiesMap) {
         this.connectionPropertiesMap = connectionPropertiesMap;

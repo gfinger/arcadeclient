@@ -16,6 +16,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.makkiato.arcadedb.client.exception.server.CommandExecutionException;
 import org.makkiato.arcadedb.client.exception.server.DuplicatedKeyException;
+import org.makkiato.arcadedb.client.exception.server.IllegalArgumentException;
 import org.makkiato.arcadedb.client.exception.server.ParseException;
 import org.makkiato.arcadedb.client.exception.server.SchemaException;
 import org.makkiato.arcadedb.client.exception.server.ValidationException;
@@ -183,13 +184,23 @@ public class ArcadedbConnectionIT {
 
         @Test
         @Order(9)
+        void selectWithQuery() {
+                assertThat(connection.query("select from Customer where name = 'Tester'").blockFirst())
+                                .contains(entry("@rid", "#1:0"), entry("@type", "Customer"), entry("@cat", "v"),
+                                                entry("name", "Tester"));
+                assertThatThrownBy(() -> connection.query("insert into Customer set name = 'Secondo'").blockFirst())
+                                .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @Order(10)
         void delete() {
                 assertThat(connection.command("delete from Customer where name = 'Tester'").blockFirst())
                                 .contains(entry("count", 1));
         }
 
         @Test
-        @Order(10)
+        @Order(11)
         void drop() {
                 assertThat(connection.command("drop type Customer unsafe").blockFirst())
                                 .contains(entry("operation", "drop type"), entry("typeName", "Customer"));

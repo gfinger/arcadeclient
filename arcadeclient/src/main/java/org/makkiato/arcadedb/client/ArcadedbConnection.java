@@ -39,6 +39,13 @@ public class ArcadedbConnection implements AutoCloseable {
                 .flatMapMany(Flux::fromArray);
     }
 
+    public Flux<Map<String, Object>> query(String query) {
+        return isClosed ? Flux.empty() : new QueryExchange("sql", query, databaseName, webClient)
+                .exchange()
+                .map(response -> response.result())
+                .flatMapMany(Flux::fromArray);
+    }
+
 
     public void close() {
         this.isClosed = true;
