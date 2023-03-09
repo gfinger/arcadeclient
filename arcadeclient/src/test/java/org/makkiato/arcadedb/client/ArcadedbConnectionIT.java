@@ -211,4 +211,20 @@ public class ArcadedbConnectionIT {
                                                 .equals(Level.ERROR)
                                                 && event.getFormattedMessage().contains("was not found")));
         }
+
+        @Test
+        @Order(12)
+        void script() {
+                var script = new String[] {
+                                "create vertex type Customer",
+                                "create property Customer.name String (mandatory true, notnull true)",
+                                "create index on Customer (name) unique",
+                                "insert into Customer set name = 'Tester'",
+                                "update Customer set age = 25 where name = 'Tester'",
+                                "delete from Customer where name = :name",
+                                "drop type Customer unsafe"
+                };
+                assertThat(connection.script(script, Map.of("name", "Tester")).blockFirst())
+                                .contains(entry("result", "drop type Customer unsafe"));
+        }
 }

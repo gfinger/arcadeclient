@@ -7,8 +7,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Represents one session on the ArcadeDB.
@@ -27,13 +29,27 @@ public class ArcadedbConnection implements AutoCloseable {
         this.webClient = webClient;
     }
 
+    public Flux<Map<String, Object>> script(String[] commands) {
+        var command = Arrays.stream(commands).map(c -> String.format("\"%s\"", c)).collect(Collectors.joining(";"));
+        return command("sqlscript", command, null);
+    }
+
+    public Flux<Map<String, Object>> script(String[] commands, Map<String, Object> params) {
+        var command = Arrays.stream(commands).map(c -> String.format("\"%s\"", c)).collect(Collectors.joining(";"));
+        return command("sqlscript", command, params);
+    }
+
 
     public Flux<Map<String, Object>> command(String command) {
         return command(command, null);
     }
 
     public Flux<Map<String, Object>> command(String command, Map<String, Object> params) {
-        return isClosed ? Flux.empty() : new CommandExchange("sql", command, databaseName, params, webClient)
+        return command("sql", command, params);
+    }
+
+    public Flux<Map<String, Object>> command(String language, String command, Map<String, Object> params) {
+        return isClosed ? Flux.empty() : new CommandExchange(language, command, databaseName, params, webClient)
                 .exchange()
                 .map(response -> response.result())
                 .flatMapMany(Flux::fromArray);
