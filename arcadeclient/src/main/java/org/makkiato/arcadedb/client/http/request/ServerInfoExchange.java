@@ -1,10 +1,10 @@
 package org.makkiato.arcadedb.client.http.request;
 
 import org.makkiato.arcadedb.client.http.response.ServerInfoResponse;
-import org.makkiato.arcadedb.client.http.response.StatusResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
+
 import reactor.core.publisher.Mono;
 
 public class ServerInfoExchange implements Exchange<ServerInfoResponse> {

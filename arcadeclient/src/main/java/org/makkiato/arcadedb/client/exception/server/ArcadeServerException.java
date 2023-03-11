@@ -26,4 +26,8 @@ public class ArcadeServerException extends RuntimeException {
         super(message);
         this.status = status;
     }
+
+    int getStatus() {
+        return status;
+    }
 }

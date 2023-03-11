@@ -7,9 +7,9 @@ import lombok.Getter;
 @Getter
 public class Vertex {
     @JsonProperty("@rid")
-    private String rid;
+    protected String rid;
     @JsonProperty("@type")
-    private String type;
+    protected String type;
     @JsonProperty("@cat")
-    private String cat;
+    protected String cat;
 }

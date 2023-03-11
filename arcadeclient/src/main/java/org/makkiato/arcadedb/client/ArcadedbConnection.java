@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
+import org.makkiato.arcadedb.client.exception.client.ConversionException;
 import org.makkiato.arcadedb.client.http.request.BeginTAExchange;
 import org.makkiato.arcadedb.client.http.request.CommandExchange;
 import org.makkiato.arcadedb.client.http.request.CommitTAExchange;
@@ -16,6 +17,7 @@ import org.makkiato.arcadedb.client.http.request.ServerExchange;
 import org.makkiato.arcadedb.client.http.response.EmptyResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -71,6 +73,18 @@ public class ArcadedbConnection implements AutoCloseable {
                         .flatMapMany(Flux::fromArray);
     }
 
+    @SuppressWarnings("unchecked")
+    public <T> Mono<T> insertObject(String documentName, T object) {
+        return isClosed ? Mono.empty() :
+            command(String.format("insert into %s content %s", documentName, convertObjectToJsonString(object)))
+            .elementAt(0)
+            .map(result -> convertMapToObject((Class<T>)object.getClass(), result));
+    }
+
+    public <T extends Vertex> Mono<T> insertObject(T object) {
+        return insertObject(object.getType(), object);
+    }
+
     public <T> Flux<T> selectObject(String command,
             Class<T> objectType) {
         return selectObject("sql", command, null, objectType, (x, y) -> convertMapToObject(x, y));
@@ -106,6 +120,14 @@ public class ArcadedbConnection implements AutoCloseable {
 
     private <T> T convertMapToObject(Class<T> objectType, Map<String, Object> map) {
         return objectMapper.convertValue(map, objectType);
+    }
+
+    private <T> String convertObjectToJsonString(T object) {
+        try {
+            return objectMapper.writeValueAsString(object);
+        } catch (JsonProcessingException ex) {
+            throw new ConversionException(String.format("cannot convert object %s", object.toString()), ex);
+        }
     }
 
     public Flux<Map<String, Object>> query(String query) {

@@ -161,15 +161,33 @@ public class ArcadedbConnectionIT {
         @Test
         @Order(7)
         void insertWithParameters() {
-                assertThat(connection.command("insert into Customer set name = :name", Map.of("name", "Friend"))
+                assertThat(connection.command("insert into Customer set name = :name", Map.of("name", "Cookie Factory"))
                                 .blockFirst())
                                 .contains(entry("@rid", "#7:0"), entry("@type", "Customer"), entry("@cat", "v"),
                                                 entry("@out", 0),
-                                                entry("@in", 0), entry("name", "Friend"));
+                                                entry("@in", 0), entry("name", "Cookie Factory"));
         }
 
         @Test
         @Order(8)
+        void insertObject() {
+                var customer1 = new Customer();
+                customer1.setName("ABC Electronics");
+                assertThat(connection.insertObject("Customer", customer1).block())
+                                .hasFieldOrPropertyWithValue("name", "ABC Electronics")
+                                .matches(cu -> cu.getCat() != null && cu.getRid() != null
+                                                && cu.getType().equals("Customer"), "no valid vertex");
+
+                var customer2 = new Customer();
+                customer2.setName("XYZ Electronics");
+                assertThat(connection.insertObject(customer2).block())
+                                .hasFieldOrPropertyWithValue("name", "XYZ Electronics")
+                                .matches(cu -> cu.getCat() != null && cu.getRid() != null
+                                                && cu.getType().equals("Customer"), "no valid vertex");
+        }
+
+        @Test
+        @Order(9)
         void selectWithCommand() {
                 assertThat(connection.command("select from Customer where name = 'Tester'").blockFirst())
                                 .contains(entry("@rid", "#1:0"), entry("@type", "Customer"), entry("@cat", "v"),
@@ -184,19 +202,21 @@ public class ArcadedbConnectionIT {
         }
 
         @Test
-        @Order(9)
-        void readVertex() {
+        @Order(10)
+        void selectObject() {
                 assertThat(connection.selectObject("select from Customer where name = 'Tester'",
                                 Customer.class).blockFirst())
-                                .has(new Condition<Customer>(customer -> customer.getName().equals("Tester"), "has name 'Tester'"))
+                                .has(new Condition<Customer>(customer -> customer.getName().equals("Tester"),
+                                                "has name 'Tester'"))
                                 .has(new Condition<Customer>(customer -> customer.getRid() != null, "has @rid"))
                                 .has(new Condition<Customer>(customer -> customer.getCat().equals("v"), "has @v"))
-                                .has(new Condition<Customer>(customer -> customer.getType().equals("Customer"), "has @type"))
+                                .has(new Condition<Customer>(customer -> customer.getType().equals("Customer"),
+                                                "has @type"))
                                 .isInstanceOf(Customer.class);
         }
 
         @Test
-        @Order(10)
+        @Order(11)
         void selectWithQuery() {
                 assertThat(connection.query("select from Customer where name = 'Tester'").blockFirst())
                                 .contains(entry("@rid", "#1:0"), entry("@type", "Customer"), entry("@cat", "v"),
@@ -206,14 +226,14 @@ public class ArcadedbConnectionIT {
         }
 
         @Test
-        @Order(11)
+        @Order(12)
         void delete() {
                 assertThat(connection.command("delete from Customer where name = 'Tester'").blockFirst())
                                 .contains(entry("count", 1));
         }
 
         @Test
-        @Order(12)
+        @Order(13)
         void drop() {
                 assertThat(connection.command("drop type Customer unsafe").blockFirst())
                                 .contains(entry("operation", "drop type"), entry("typeName", "Customer"));
@@ -226,7 +246,7 @@ public class ArcadedbConnectionIT {
         }
 
         @Test
-        @Order(13)
+        @Order(14)
         void script() {
                 var script = new String[] {
                                 "create vertex type Customer",
