@@ -85,6 +85,26 @@ public class ArcadedbConnection implements AutoCloseable {
         return insertObject(object.getType(), object);
     }
 
+    public <T> Mono<Map<String, Object>> updateObject(String rid, T object) {
+        return isClosed ? Mono.empty() :
+            command(String.format("update %s content %s", rid, convertObjectToJsonString(object)))
+            .elementAt(0);
+    }
+
+    public <T extends Vertex> Mono<Map<String, Object>> updateObject(T object) {
+        return updateObject(object.getRid(), object);
+    }
+
+    public <T> Mono<Map<String, Object>> mergeObject(String rid, T object) {
+        return isClosed ? Mono.empty() :
+            command(String.format("update %s merge %s", rid, convertObjectToJsonString(object)))
+            .elementAt(0);
+    }
+
+    public <T extends Vertex> Mono<Map<String, Object>> mergeObject(T object) {
+        return updateObject(object.getRid(), object);
+    }
+
     public <T> Flux<T> selectObject(String command,
             Class<T> objectType) {
         return selectObject("sql", command, null, objectType, (x, y) -> convertMapToObject(x, y));
@@ -93,6 +113,10 @@ public class ArcadedbConnection implements AutoCloseable {
     public <T> Flux<T> selectObject(String command, Map<String, Object> params,
             Class<T> objectType) {
         return selectObject("sql", command, params, objectType, (x, y) -> convertMapToObject(x, y));
+    }
+
+    public <T> Mono<T> findById(String rid, Class<T> objectType) {
+        return selectObject(String.format("select from [%s]", rid), objectType).elementAt(0);
     }
 
     public <T> Flux<T> selectObject(String language, String command,

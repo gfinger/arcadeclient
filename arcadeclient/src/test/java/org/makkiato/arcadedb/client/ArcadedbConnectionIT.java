@@ -171,23 +171,61 @@ public class ArcadedbConnectionIT {
         @Test
         @Order(8)
         void insertObject() {
+                var address = Address.builder().town("Frankfurt a.M.").zipcode("60596").street("Städelstraße").build();
                 var customer1 = new Customer();
+                customer1.setAddress(address);
                 customer1.setName("ABC Electronics");
                 assertThat(connection.insertObject("Customer", customer1).block())
                                 .hasFieldOrPropertyWithValue("name", "ABC Electronics")
                                 .matches(cu -> cu.getCat() != null && cu.getRid() != null
-                                                && cu.getType().equals("Customer"), "no valid vertex");
+                                                && cu.getType().equals("Customer"), "no valid vertex")
+                                .matches(cu -> cu.getAddress() != null
+                                                && cu.getAddress().getStreet().equals("Städelstraße"));
 
                 var customer2 = new Customer();
+                customer2.setAddress(address);
                 customer2.setName("XYZ Electronics");
                 assertThat(connection.insertObject(customer2).block())
                                 .hasFieldOrPropertyWithValue("name", "XYZ Electronics")
                                 .matches(cu -> cu.getCat() != null && cu.getRid() != null
-                                                && cu.getType().equals("Customer"), "no valid vertex");
+                                                && cu.getType().equals("Customer"), "no valid vertex")
+                                .matches(cu -> cu.getAddress() != null
+                                                && cu.getAddress().getStreet().equals("Städelstraße"));
         }
 
         @Test
-        @Order(9)
+        @Order(10)
+        void updateObject() {
+                var address = Address.builder().town("Frankfurt a.M.").zipcode("60596").street("Städelstraße").build();
+                var customer = new Customer();
+                customer.setAddress(address);
+                customer.setName("123 Electronics");
+                customer = connection.insertObject("Customer", customer).block();
+                customer.setName("456 Electronics");
+                assertThat(connection.updateObject(customer).block())
+                                .containsEntry("count", 1);
+                assertThat(connection.findById(customer.getRid(), Customer.class).block())
+                                .hasFieldOrPropertyWithValue("name", "456 Electronics");
+        }
+
+        @Test
+        @Order(11)
+        void mergeObject() {
+                var address = Address.builder().town("Frankfurt a.M.").zipcode("60596").street("Städelstraße").build();
+                var customer = new Customer();
+                customer.setAddress(address);
+                customer.setName("123 BredAnBretzels");
+                customer = connection.insertObject("Customer", customer).block();
+                customer.setPhone("1234567890");
+                assertThat(connection.mergeObject(customer).block())
+                                .containsEntry("count", 1);
+                assertThat(connection.findById(customer.getRid(), Customer.class).block())
+                                .hasFieldOrPropertyWithValue("name", "123 BredAnBretzels")
+                                .hasFieldOrPropertyWithValue("phone", "1234567890");
+        }
+
+        @Test
+        @Order(12)
         void selectWithCommand() {
                 assertThat(connection.command("select from Customer where name = 'Tester'").blockFirst())
                                 .contains(entry("@rid", "#1:0"), entry("@type", "Customer"), entry("@cat", "v"),
@@ -202,7 +240,7 @@ public class ArcadedbConnectionIT {
         }
 
         @Test
-        @Order(10)
+        @Order(13)
         void selectObject() {
                 assertThat(connection.selectObject("select from Customer where name = 'Tester'",
                                 Customer.class).blockFirst())
@@ -216,7 +254,7 @@ public class ArcadedbConnectionIT {
         }
 
         @Test
-        @Order(11)
+        @Order(14)
         void selectWithQuery() {
                 assertThat(connection.query("select from Customer where name = 'Tester'").blockFirst())
                                 .contains(entry("@rid", "#1:0"), entry("@type", "Customer"), entry("@cat", "v"),
@@ -226,14 +264,14 @@ public class ArcadedbConnectionIT {
         }
 
         @Test
-        @Order(12)
+        @Order(15)
         void delete() {
                 assertThat(connection.command("delete from Customer where name = 'Tester'").blockFirst())
                                 .contains(entry("count", 1));
         }
 
         @Test
-        @Order(13)
+        @Order(16)
         void drop() {
                 assertThat(connection.command("drop type Customer unsafe").blockFirst())
                                 .contains(entry("operation", "drop type"), entry("typeName", "Customer"));
@@ -246,7 +284,7 @@ public class ArcadedbConnectionIT {
         }
 
         @Test
-        @Order(14)
+        @Order(17)
         void script() {
                 var script = new String[] {
                                 "create vertex type Customer",

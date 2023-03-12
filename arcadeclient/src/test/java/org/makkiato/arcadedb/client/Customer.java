@@ -7,6 +7,8 @@ import lombok.Setter;
 @Setter
 public class Customer extends Vertex {
     private String name;
+    private Address address;
+    private String phone;
 
     public Customer() {
         type = "Customer";
