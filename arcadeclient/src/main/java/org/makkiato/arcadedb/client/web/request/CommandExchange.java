@@ -1,30 +1,31 @@
-package org.makkiato.arcadedb.client.http.request;
+package org.makkiato.arcadedb.client.web.request;
 
-import org.makkiato.arcadedb.client.http.response.CommandResponse;
+import org.makkiato.arcadedb.client.web.response.CommandResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import reactor.core.publisher.Mono;
 
-public class QueryExchange implements Exchange<CommandResponse> {
+import java.util.Map;
+
+public class CommandExchange implements Exchange<CommandResponse> {
     private final String name;
     private final WebClient webClient;
-    private final String queryPathSegment;
-    private final String language;
+    private final CommandPayload payload;
 
-    public QueryExchange(String language, String query, String name, WebClient webClient) {
+    public CommandExchange(String language, String command, String name, Map<String, Object> params, WebClient webClient) {
         this.name = name;
         this.webClient = webClient;
-        this.queryPathSegment = query;
-        this.language = language;
+        this.payload = new CommandPayload(language, command, params, SERIALIZER_JSON);
     }
 
     @Override
     public Mono<CommandResponse> exchange() {
-        return webClient.get()
-                .uri(String.format("%s/%s/%s/%s", Exchange.BASEURL_QUERY, name, language, queryPathSegment))
+        return webClient.post()
+                .uri(String.format("%s/%s", Exchange.BASEURL_COMMAND, name))
                 .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(payload)
                 .exchangeToMono(response -> {
                     if (response.statusCode().equals(HttpStatus.OK)) {
                         return response.bodyToMono(CommandResponse.class);

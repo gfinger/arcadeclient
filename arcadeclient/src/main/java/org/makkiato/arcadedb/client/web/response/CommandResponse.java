@@ -1,4 +1,4 @@
-package org.makkiato.arcadedb.client.http.response;
+package org.makkiato.arcadedb.client.web.response;
 
 import java.util.Map;
 

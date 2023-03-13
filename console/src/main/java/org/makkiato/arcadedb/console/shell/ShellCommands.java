@@ -3,6 +3,8 @@ package org.makkiato.arcadedb.console.shell;
 import org.makkiato.arcadedb.client.ArcadedbClient;
 import org.makkiato.arcadedb.client.ArcadedbConnection;
 import org.makkiato.arcadedb.client.ArcadedbFactory;
+import org.makkiato.arcadedb.client.ArcadedbProperties;
+import org.makkiato.arcadedb.client.ArcadedbProperties.ConnectionProperties;
 import org.makkiato.arcadedb.client.exception.client.ArcadeClientConfigurationException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.shell.Availability;
@@ -16,17 +18,20 @@ import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellMethodAvailability;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 @ShellComponent
 public class ShellCommands extends AbstractShellComponent {
     private static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(2);
     private final ApplicationEventPublisher publisher;
-    private final ArcadedbClient arcadedbClient;
     private ArcadedbFactory arcadedbFactory;
     private ArcadedbConnection connection = null;
+    private ArcadedbProperties arcadedbProperties;
+    private ArcadedbClient arcadedbClient;
 
-    public ShellCommands(ArcadedbClient arcadedbClient, ApplicationEventPublisher publisher) {
+    public ShellCommands(ArcadedbProperties arcadedbProperties, ArcadedbClient arcadedbClient, ApplicationEventPublisher publisher) {
+        this.arcadedbProperties = arcadedbProperties;
         this.arcadedbClient = arcadedbClient;
         this.publisher = publisher;
     }
@@ -34,16 +39,20 @@ public class ShellCommands extends AbstractShellComponent {
     @ShellMethodAvailability("connectionClosedCheck")
     @ShellMethod(value = "Select the server to work with", group = "Server")
     public String selectServer() {
-        var items = getArcadedbClient().getConnectionPropertiesMap().keySet().stream().map(key -> SelectorItem.of(key, key)).toList();
+        var connectionProperties = arcadedbProperties.getConnections() != null ? arcadedbProperties.getConnections() : new HashMap<String, ConnectionProperties>();
+        if(arcadedbProperties.getConnection() != null) {
+            connectionProperties.put(arcadedbProperties.getDefaultConfigurationName(), arcadedbProperties.getConnection());
+        }
+        var items = connectionProperties.keySet().stream().map(key -> SelectorItem.of(key, key)).toList();
         var component = new SingleItemSelector<>(getTerminal(), items, "choose configured connection from list", null);
         component.setResourceLoader(getResourceLoader());
         component.setTemplateExecutor(getTemplateExecutor());
         var context = component.run(SingleItemSelector.SingleItemSelectorContext.empty());
         context.getResultItem().map(Itemable::getItem).ifPresent(serverName -> {
             try {
-                setArcadedbFactory(getArcadedbClient().createFactoryFor(serverName));
+                setArcadedbFactory(new ArcadedbFactory(arcadedbClient, connectionProperties.get(serverName)), serverName);
             } catch (ArcadeClientConfigurationException e) {
-                setArcadedbFactory(null);
+                setArcadedbFactory(null, null);
                 throw new RuntimeException(e);
             }
         });
@@ -112,10 +121,6 @@ public class ShellCommands extends AbstractShellComponent {
         return publisher;
     }
 
-    private ArcadedbClient getArcadedbClient() {
-        return arcadedbClient;
-    }
-
     private ArcadedbConnection getConnection() {
         return connection;
     }
@@ -129,8 +134,8 @@ public class ShellCommands extends AbstractShellComponent {
         return arcadedbFactory;
     }
 
-    public void setArcadedbFactory(ArcadedbFactory arcadedbFactory) {
+    public void setArcadedbFactory(ArcadedbFactory arcadedbFactory, String configurationName) {
         this.arcadedbFactory = arcadedbFactory;
-        getPublisher().publishEvent(new ServerUpdateEvent(this, arcadedbFactory.getName()));
+        getPublisher().publishEvent(new ServerUpdateEvent(this, configurationName));
     }
 }

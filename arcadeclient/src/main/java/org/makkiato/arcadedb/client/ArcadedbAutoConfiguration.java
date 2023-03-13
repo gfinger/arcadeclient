@@ -1,23 +1,30 @@
 package org.makkiato.arcadedb.client;
 
+import org.makkiato.arcadedb.client.web.ArcadedbErrorResponseFilter;
+import org.makkiato.arcadedb.client.web.ArcadedbErrorResponseFilterImpl;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
 @AutoConfiguration
-@ConditionalOnProperty(prefix = "org.makkiato.arcadedb", name = "enabled")
 @EnableConfigurationProperties(ArcadedbProperties.class)
 public class ArcadedbAutoConfiguration {
-    private final ArcadedbProperties properties;
-
-    public ArcadedbAutoConfiguration(ArcadedbProperties properties) {
-        this.properties = properties;
+    @Bean
+    @ConditionalOnMissingBean
+    public ArcadedbErrorResponseFilter arcadedbErrorResponseFilter() {
+        return new ArcadedbErrorResponseFilterImpl();
     }
 
     @Bean
-    public ArcadedbClient arcadedbClient() {
-        return new ArcadedbClient(properties.getConnections());
+    @ConditionalOnMissingBean
+    public ArcadedbClient arcadedbClient(ArcadedbErrorResponseFilter arcadedbErrorResponseFilter) {
+        return new ArcadedbClient(arcadedbErrorResponseFilter);
     }
 
+    @Bean
+    @ConditionalOnMissingBean
+    public ArcadedbFactory arcadedbFactory(ArcadedbProperties properties, ArcadedbClient arcadedbClient) {
+        return new ArcadedbFactory(arcadedbClient, properties.getConnectionPropertiesFor(null));
+    }
 }

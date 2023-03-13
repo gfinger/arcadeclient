@@ -1,6 +1,7 @@
-package org.makkiato.arcadedb.client.http.request;
+package org.makkiato.arcadedb.client.web.request;
 
-import org.makkiato.arcadedb.client.http.response.Response;
+import org.makkiato.arcadedb.client.web.response.Response;
+
 import reactor.core.publisher.Mono;
 
 public interface Exchange<T extends Response> {

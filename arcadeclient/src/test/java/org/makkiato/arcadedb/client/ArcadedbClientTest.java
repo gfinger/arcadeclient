@@ -2,10 +2,13 @@ package org.makkiato.arcadedb.client;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+
+import org.junit.Before;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.makkiato.arcadedb.client.ArcadedbProperties.ConnectionProperties;
 import org.makkiato.arcadedb.client.exception.client.ArcadeClientException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -19,7 +22,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.catchThrowable;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringJUnitConfig(ArcadedbClientITConfiguration.class)
+@SpringJUnitConfig(ArcadedbAutoConfiguration.class)
 @TestPropertySource(properties = {
         "org.makkiato.arcadedb.connections.mock.host=localhost",
         "org.makkiato.arcadedb.connections.mock.port=2480",
@@ -65,17 +68,18 @@ class ArcadedbClientTest {
     @Autowired
     private ArcadedbProperties properties;
 
-    @BeforeEach
-    void init() throws IOException {
-        mockWebServer = new MockWebServer();
+    private ConnectionProperties mockProperties;
 
-        var mockProperties = properties.getConnections().get("mock");
+    @BeforeEach
+    void initEach() throws IOException {
+        mockProperties = properties.getConnectionPropertiesFor("mock");
+        mockWebServer = new MockWebServer();
         mockProperties.setHost(mockWebServer.getHostName());
         mockProperties.setPort(mockWebServer.getPort());
     }
 
     @AfterEach
-    void tearDown() throws IOException {
+    void tearDownEach() throws IOException {
         mockWebServer.shutdown();
     }
 
@@ -85,13 +89,13 @@ class ArcadedbClientTest {
                 .setBody(serverInfoResponse)
                 .setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                 .setResponseCode(HttpStatus.OK.value()));
-        var serverInfo = arcadedbClient.serverInfo("mock", "cluster");
+        var serverInfo = arcadedbClient.serverInfo(mockProperties, "cluster");
         assertTrue(serverInfo.isPresent());
     }
 
     @Test
     void missingServerInfo() {
-        var throwable = catchThrowable(() -> arcadedbClient.serverInfo("mock1", "cluster"));
+        var throwable = catchThrowable(() -> arcadedbClient.serverInfo(properties.getConnectionPropertiesFor("mock1"), "cluster"));
         assertThat(throwable).isInstanceOf(ArcadeClientException.class).hasMessage("Missing configuration for " +
                 "database: %s", "mock1");
     }

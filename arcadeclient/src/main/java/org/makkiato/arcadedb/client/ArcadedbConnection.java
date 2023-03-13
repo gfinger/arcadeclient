@@ -8,13 +8,13 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import org.makkiato.arcadedb.client.exception.client.ConversionException;
-import org.makkiato.arcadedb.client.http.request.BeginTAExchange;
-import org.makkiato.arcadedb.client.http.request.CommandExchange;
-import org.makkiato.arcadedb.client.http.request.CommitTAExchange;
-import org.makkiato.arcadedb.client.http.request.QueryExchange;
-import org.makkiato.arcadedb.client.http.request.RollbackTAExchange;
-import org.makkiato.arcadedb.client.http.request.ServerExchange;
-import org.makkiato.arcadedb.client.http.response.EmptyResponse;
+import org.makkiato.arcadedb.client.web.request.BeginTAExchange;
+import org.makkiato.arcadedb.client.web.request.CommandExchange;
+import org.makkiato.arcadedb.client.web.request.CommitTAExchange;
+import org.makkiato.arcadedb.client.web.request.QueryExchange;
+import org.makkiato.arcadedb.client.web.request.RollbackTAExchange;
+import org.makkiato.arcadedb.client.web.request.ServerExchange;
+import org.makkiato.arcadedb.client.web.response.EmptyResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.fasterxml.jackson.core.JsonProcessingException;

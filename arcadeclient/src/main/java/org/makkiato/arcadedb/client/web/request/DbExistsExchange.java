@@ -1,6 +1,6 @@
-package org.makkiato.arcadedb.client.http.request;
+package org.makkiato.arcadedb.client.web.request;
 
-import org.makkiato.arcadedb.client.http.response.BooleanResponse;
+import org.makkiato.arcadedb.client.web.response.BooleanResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;

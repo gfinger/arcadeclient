@@ -21,6 +21,7 @@ import org.makkiato.arcadedb.client.exception.server.IllegalArgumentException;
 import org.makkiato.arcadedb.client.exception.server.ParseException;
 import org.makkiato.arcadedb.client.exception.server.SchemaException;
 import org.makkiato.arcadedb.client.exception.server.ValidationException;
+import org.makkiato.arcadedb.client.web.ArcadedbErrorResponseFilterImpl;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
@@ -31,7 +32,7 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 
-@SpringJUnitConfig(ArcadedbClientITConfiguration.class)
+@SpringJUnitConfig(ArcadedbAutoConfiguration.class)
 @TestPropertySource(properties = {
                 "org.makkiato.arcadedb.connections.arcadedb0.host=localhost",
                 "org.makkiato.arcadedb.connections.arcadedb0.port=2480",
@@ -44,14 +45,12 @@ import ch.qos.logback.core.read.ListAppender;
 public class ArcadedbConnectionIT {
         private static final String DB_NAME = "xyz-connection-test";
         @Autowired
-        private ArcadedbClient arcadedbClient;
         private ArcadedbFactory arcadedbFactory;
         private ArcadedbConnection connection;
         private ListAppender<ILoggingEvent> logWatcher;
 
         @BeforeAll
         void init() {
-                arcadedbFactory = arcadedbClient.createFactoryFor("arcadedb0");
                 arcadedbFactory.create(DB_NAME).block();
         }
 
@@ -60,7 +59,7 @@ public class ArcadedbConnectionIT {
                 connection = arcadedbFactory.open(DB_NAME).block();
                 logWatcher = new ListAppender<>();
                 logWatcher.start();
-                ((Logger) LoggerFactory.getLogger(ArcadedbClient.class)).addAppender(logWatcher);
+                ((Logger) LoggerFactory.getLogger(ArcadedbErrorResponseFilterImpl.class)).addAppender(logWatcher);
         }
 
         @AfterAll

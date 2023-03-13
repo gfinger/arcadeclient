@@ -1,6 +1,6 @@
-package org.makkiato.arcadedb.client.http.request;
+package org.makkiato.arcadedb.client.web.request;
 
-import org.makkiato.arcadedb.client.http.response.EmptyResponse;
+import org.makkiato.arcadedb.client.web.response.EmptyResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;

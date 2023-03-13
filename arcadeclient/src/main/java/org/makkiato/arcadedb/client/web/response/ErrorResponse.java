@@ -1,4 +1,4 @@
-package org.makkiato.arcadedb.client.http.response;
+package org.makkiato.arcadedb.client.web.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;

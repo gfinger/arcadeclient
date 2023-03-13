@@ -1,22 +1,19 @@
 package org.makkiato.arcadedb.client;
 
-import lombok.Getter;
+import org.makkiato.arcadedb.client.ArcadedbProperties.ConnectionProperties;
 import org.makkiato.arcadedb.client.exception.client.ArcadeClientConfigurationException;
-import org.makkiato.arcadedb.client.http.request.DbExistsExchange;
-import org.makkiato.arcadedb.client.http.request.ServerExchange;
-import org.makkiato.arcadedb.client.http.response.BooleanResponse;
-import org.makkiato.arcadedb.client.http.response.StatusResponse;
-import reactor.core.publisher.Mono;
+import org.makkiato.arcadedb.client.web.request.DbExistsExchange;
+import org.makkiato.arcadedb.client.web.request.ServerExchange;
+import org.makkiato.arcadedb.client.web.response.BooleanResponse;
+import org.makkiato.arcadedb.client.web.response.StatusResponse;
 
+import reactor.core.publisher.Mono;
 
 public class ArcadedbFactory {
     private final ArcadedbClient.WebClientSupplier webClientSupplier;
-    @Getter
-    private final String name;
 
-    ArcadedbFactory(String name, ArcadedbClient.WebClientSupplier webClientSupplier) {
-        this.name = name;
-        this.webClientSupplier = webClientSupplier;
+    public ArcadedbFactory(ArcadedbClient arcadedbClient, ConnectionProperties connectionProperties) {
+        this.webClientSupplier = arcadedbClient.getWebClientSupplierFor(connectionProperties);
     }
 
     public Mono<ArcadedbConnection> open(String databaseName) {
