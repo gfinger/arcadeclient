@@ -80,6 +80,9 @@ public class ArcadedbConnectionIT {
                                                 .equals(Level.ERROR)
                                                 && event.getFormattedMessage().contains("already exists")))
                                 .hasSize(1);
+
+                assertThat(connection.command("create vertex type Client").blockFirst()).contains(entry("operation",
+                                "create vertex type"), entry("typeName", "Client"));
         }
 
         @Test
@@ -188,7 +191,7 @@ public class ArcadedbConnectionIT {
                 assertThat(connection.insertObject(customer2).block())
                                 .hasFieldOrPropertyWithValue("name", "XYZ Electronics")
                                 .matches(cu -> cu.getCat() != null && cu.getRid() != null
-                                                && cu.getType().equals("Customer"), "no valid vertex")
+                                                && cu.getType().equals("Client"), "no valid vertex")
                                 .matches(cu -> cu.getAddress() != null
                                                 && cu.getAddress().getStreet().equals("Städelstraße"));
         }
@@ -281,6 +284,9 @@ public class ArcadedbConnectionIT {
                                 .filter(event -> event.getLevel()
                                                 .equals(Level.ERROR)
                                                 && event.getFormattedMessage().contains("was not found")));
+
+                assertThat(connection.command("drop type Client unsafe").blockFirst())
+                                .contains(entry("operation", "drop type"), entry("typeName", "Client"));
         }
 
         @Test
