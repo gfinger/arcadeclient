@@ -2,6 +2,8 @@ package org.makkiato.arcadedb.client;
 
 import org.makkiato.arcadedb.client.web.ArcadedbErrorResponseFilter;
 import org.makkiato.arcadedb.client.web.ArcadedbErrorResponseFilterImpl;
+import org.makkiato.arcadedb.client.web.client.HALeaderWebClientSupplierStrategy;
+import org.makkiato.arcadedb.client.web.client.WebClientSupplierStrategy;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -18,8 +20,15 @@ public class ArcadedbAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public ArcadedbClient arcadedbClient(ArcadedbErrorResponseFilter arcadedbErrorResponseFilter) {
-        return new ArcadedbClient(arcadedbErrorResponseFilter);
+    public WebClientSupplierStrategy webClientSupplierStrategy() {
+        return new HALeaderWebClientSupplierStrategy();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public ArcadedbClient arcadedbClient(ArcadedbErrorResponseFilter arcadedbErrorResponseFilter,
+            WebClientSupplierStrategy webClientSupplierStrategy) {
+        return new ArcadedbClient(arcadedbErrorResponseFilter, webClientSupplierStrategy);
     }
 
     @Bean

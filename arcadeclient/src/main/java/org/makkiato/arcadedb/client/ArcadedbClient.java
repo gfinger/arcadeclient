@@ -2,6 +2,9 @@ package org.makkiato.arcadedb.client;
 
 import org.makkiato.arcadedb.client.ArcadedbProperties.ConnectionProperties;
 import org.makkiato.arcadedb.client.web.ArcadedbErrorResponseFilter;
+import org.makkiato.arcadedb.client.web.client.WebClientSpec;
+import org.makkiato.arcadedb.client.web.client.WebClientSupplier;
+import org.makkiato.arcadedb.client.web.client.WebClientSupplierStrategy;
 import org.makkiato.arcadedb.client.web.request.ServerInfoExchange;
 import org.makkiato.arcadedb.client.web.response.ServerInfoResponse;
 import org.springframework.cache.annotation.Cacheable;
@@ -19,10 +22,12 @@ public class ArcadedbClient {
     private static final String PATH_SEGMENT_API = "/api";
     private static final String PATH_SEGMENT_VERSION = "/v1";
     private static final String SCHEME_HTTP = "http";
-    private ArcadedbErrorResponseFilter arcadedbErrorResponseFilter;
+    private final ArcadedbErrorResponseFilter arcadedbErrorResponseFilter;
+    private final WebClientSupplierStrategy webClientSupplierStrategy;
 
-    public ArcadedbClient(ArcadedbErrorResponseFilter arcadedbErrorResponseFilter) {
+    public ArcadedbClient(ArcadedbErrorResponseFilter arcadedbErrorResponseFilter, WebClientSupplierStrategy webClientSupplierStrategy) {
         this.arcadedbErrorResponseFilter = arcadedbErrorResponseFilter;
+        this.webClientSupplierStrategy = webClientSupplierStrategy;
     }
 
     @Cacheable(value = "server-info")
@@ -32,6 +37,16 @@ public class ArcadedbClient {
         var timeout = connectionProperties.getConnectionTimeoutSecs();
         return new ServerInfoExchange(mode, webClient).exchange()
                 .blockOptional(Duration.ofSeconds(timeout));
+    }
+
+    public WebClientSupplier getWebClientSupplierFor(ConnectionProperties connectionProperties) {
+        var serverInfo = serverInfo(connectionProperties, "cluster");
+        var webClientSpecs = getHAServerSpecs(serverInfo.get(), connectionProperties.getUsername(),
+                connectionProperties.getPassword());
+        webClientSpecs.add(new WebClientSpec(createWebClientFor(connectionProperties.getHost(),
+                connectionProperties.getPort(), connectionProperties.getUsername(),
+                connectionProperties.getPassword()), false, false, false));
+        return new WebClientSupplier(webClientSupplierStrategy, webClientSpecs);
     }
 
     private List<WebClientSpec> getHAServerSpecs(ServerInfoResponse serverInfo, String username, String password) {
@@ -56,7 +71,7 @@ public class ArcadedbClient {
         return specs;
     }
 
-    public WebClient createWebClientFor(String hostname, Integer port, String username, String password) {
+    private WebClient createWebClientFor(String hostname, Integer port, String username, String password) {
         String baseUrl = UriComponentsBuilder.newInstance()
                 .scheme(SCHEME_HTTP)
                 .host(hostname)
@@ -69,31 +84,5 @@ public class ArcadedbClient {
                 .filter(ExchangeFilterFunctions.basicAuthentication(username, password))
                 .build();
     }
-
-    public WebClientSupplier getWebClientSupplierFor(ConnectionProperties connectionProperties) {
-        var serverInfo = serverInfo(connectionProperties, "cluster");
-        var webClientSpecs = getHAServerSpecs(serverInfo.get(), connectionProperties.getUsername(),
-                connectionProperties.getPassword());
-        webClientSpecs.add(new WebClientSpec(createWebClientFor(connectionProperties.getHost(),
-                connectionProperties.getPort(), connectionProperties.getUsername(),
-                connectionProperties.getPassword()), false, false, false));
-        return new WebClientSupplier(webClientSpecs);
-    }
-
-    record WebClientSpec(WebClient webClient, boolean ha, boolean leader, boolean replica) {
-    }
-
-    class WebClientSupplier {
-        private final List<WebClientSpec> webClientSpecs;
-        private int index;
-
-        WebClientSupplier(List<WebClientSpec> webClientSpecs) {
-            this.index = 0;
-            this.webClientSpecs = webClientSpecs;
-        }
-
-        WebClient get() {
-            return webClientSpecs.get(index++ % webClientSpecs.size()).webClient();
-        }
-    }
 }
+
