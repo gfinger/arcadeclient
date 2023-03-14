@@ -6,14 +6,13 @@ import java.util.Map;
 import org.makkiato.arcadedb.client.exception.client.ArcadeClientConfigurationException;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @ConfigurationProperties(prefix = "org.makkiato.arcadedb")
-@Data
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor
 @AllArgsConstructor
 public class ArcadedbProperties {
     public static final int DEFAULT_PORT = 2480;
@@ -28,6 +27,7 @@ public class ArcadedbProperties {
      * The name of configuration can be chosen freely.
      * It is used when creating an ArcadedbFactory by an ArcadedbClient.
      */
+    @Setter
     private Map<String, ConnectionProperties> connections;
 
     /**
@@ -36,8 +36,10 @@ public class ArcadedbProperties {
      * This configuration is used by default, even in the presence of a
      * configuration map.
      */
+    @Setter
     private ConnectionProperties connection;
 
+    @Setter
     private String defaultConfigurationName = DEFAULT_CONFIGURATION_NAME;
 
     public ConnectionProperties getConnectionPropertiesFor(String connectionName) {

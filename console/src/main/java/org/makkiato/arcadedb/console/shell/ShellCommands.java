@@ -18,7 +18,6 @@ import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellMethodAvailability;
 
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.stream.Collectors;
 
 @ShellComponent
@@ -39,10 +38,7 @@ public class ShellCommands extends AbstractShellComponent {
     @ShellMethodAvailability("connectionClosedCheck")
     @ShellMethod(value = "Select the server to work with", group = "Server")
     public String selectServer() {
-        var connectionProperties = arcadedbProperties.getConnections() != null ? arcadedbProperties.getConnections() : new HashMap<String, ConnectionProperties>();
-        if(arcadedbProperties.getConnection() != null) {
-            connectionProperties.put(arcadedbProperties.getDefaultConfigurationName(), arcadedbProperties.getConnection());
-        }
+        var connectionProperties = arcadedbProperties.getConnectionPropertiesMap();
         var items = connectionProperties.keySet().stream().map(key -> SelectorItem.of(key, key)).toList();
         var component = new SingleItemSelector<>(getTerminal(), items, "choose configured connection from list", null);
         component.setResourceLoader(getResourceLoader());
