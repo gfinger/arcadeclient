@@ -18,9 +18,9 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
     "org.makkiato.arcadedb.connections.default.password=playwithdata",
     "org.makkiato.arcadedb.connections.default.leader-preferred=true"
 })
-class ArcadedbClientIT {
+class WebClientFactoryIT {
     @Autowired
-    private ArcadedbClient arcadedbClient;
+    private WebClientFactory arcadedbClient;
     @Autowired
     private ArcadedbProperties arcadedbProperties;
 

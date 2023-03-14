@@ -18,14 +18,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-public class ArcadedbClient {
+public class WebClientFactory {
     private static final String PATH_SEGMENT_API = "/api";
     private static final String PATH_SEGMENT_VERSION = "/v1";
     private static final String SCHEME_HTTP = "http";
     private final ArcadedbErrorResponseFilter arcadedbErrorResponseFilter;
     private final WebClientSupplierStrategy webClientSupplierStrategy;
 
-    public ArcadedbClient(ArcadedbErrorResponseFilter arcadedbErrorResponseFilter, WebClientSupplierStrategy webClientSupplierStrategy) {
+    public WebClientFactory(ArcadedbErrorResponseFilter arcadedbErrorResponseFilter, WebClientSupplierStrategy webClientSupplierStrategy) {
         this.arcadedbErrorResponseFilter = arcadedbErrorResponseFilter;
         this.webClientSupplierStrategy = webClientSupplierStrategy;
     }

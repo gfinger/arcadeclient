@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
         "org.makkiato.arcadedb.connections.mock.leader-preferred=true"
 })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class ArcadedbClientTest {
+class WebClientFactoryTest {
     private static MockWebServer mockWebServer;
     private static final String serverInfoResponse = """
                 {
@@ -64,7 +64,7 @@ class ArcadedbClientTest {
             }
             """;
     @Autowired
-    private ArcadedbClient arcadedbClient;
+    private WebClientFactory arcadedbClient;
     @Autowired
     private ArcadedbProperties properties;
 

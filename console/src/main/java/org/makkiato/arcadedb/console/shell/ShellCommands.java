@@ -1,6 +1,6 @@
 package org.makkiato.arcadedb.console.shell;
 
-import org.makkiato.arcadedb.client.ArcadedbClient;
+import org.makkiato.arcadedb.client.WebClientFactory;
 import org.makkiato.arcadedb.client.ArcadedbConnection;
 import org.makkiato.arcadedb.client.ArcadedbFactory;
 import org.makkiato.arcadedb.client.ArcadedbProperties;
@@ -27,9 +27,9 @@ public class ShellCommands extends AbstractShellComponent {
     private ArcadedbFactory arcadedbFactory;
     private ArcadedbConnection connection = null;
     private ArcadedbProperties arcadedbProperties;
-    private ArcadedbClient arcadedbClient;
+    private WebClientFactory arcadedbClient;
 
-    public ShellCommands(ArcadedbProperties arcadedbProperties, ArcadedbClient arcadedbClient, ApplicationEventPublisher publisher) {
+    public ShellCommands(ArcadedbProperties arcadedbProperties, WebClientFactory arcadedbClient, ApplicationEventPublisher publisher) {
         this.arcadedbProperties = arcadedbProperties;
         this.arcadedbClient = arcadedbClient;
         this.publisher = publisher;

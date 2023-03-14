@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono;
 public class ArcadedbFactory {
     private final WebClientSupplier webClientSupplier;
 
-    public ArcadedbFactory(ArcadedbClient arcadedbClient, ConnectionProperties connectionProperties) {
+    public ArcadedbFactory(WebClientFactory arcadedbClient, ConnectionProperties connectionProperties) {
         this.webClientSupplier = arcadedbClient.getWebClientSupplierFor(connectionProperties);
     }
 
