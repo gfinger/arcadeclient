@@ -1,5 +1,7 @@
 package org.makkiato.arcadedb.client;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Map;
@@ -15,6 +17,7 @@ import org.makkiato.arcadedb.client.web.request.QueryExchange;
 import org.makkiato.arcadedb.client.web.request.RollbackTAExchange;
 import org.makkiato.arcadedb.client.web.request.ServerExchange;
 import org.makkiato.arcadedb.client.web.response.EmptyResponse;
+import org.springframework.core.io.Resource;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -45,10 +48,22 @@ public class ArcadedbConnection implements AutoCloseable {
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
+    public Mono<Boolean> script(Resource resource) throws IOException {
+        return script(resource, null);
+    }
+
+    public Mono<Boolean> script(Resource resource, Map<String, Object> params) throws IOException {
+        var command = resource.getContentAsString(Charset.defaultCharset());
+        return isClosed ? Mono.just(false)
+                : new CommandExchange("sqlscript", command, databaseName, params, webClient)
+                        .exchange()
+                        .hasElement();
+    }
+
     public Mono<Boolean> script(String[] commands) {
         return script(commands, null);
     }
-
+    
     public Mono<Boolean> script(String[] commands, Map<String, Object> params) {
         var command = Arrays.stream(commands).map(c -> String.format("\"%s\"", c)).collect(Collectors.joining(";"));
         return isClosed ? Mono.just(false)
@@ -75,10 +90,10 @@ public class ArcadedbConnection implements AutoCloseable {
 
     @SuppressWarnings("unchecked")
     public <T> Mono<T> insertObject(String documentName, T object) {
-        return isClosed ? Mono.empty() :
-            command(String.format("insert into %s content %s", documentName, convertObjectToJsonString(object)))
-            .elementAt(0)
-            .map(result -> convertMapToObject((Class<T>)object.getClass(), result));
+        return isClosed ? Mono.empty()
+                : command(String.format("insert into %s content %s", documentName, convertObjectToJsonString(object)))
+                        .elementAt(0)
+                        .map(result -> convertMapToObject((Class<T>) object.getClass(), result));
     }
 
     public <T extends Vertex> Mono<T> insertObject(T object) {
@@ -86,9 +101,9 @@ public class ArcadedbConnection implements AutoCloseable {
     }
 
     public <T> Mono<Map<String, Object>> updateObject(String rid, T object) {
-        return isClosed ? Mono.empty() :
-            command(String.format("update %s content %s", rid, convertObjectToJsonString(object)))
-            .elementAt(0);
+        return isClosed ? Mono.empty()
+                : command(String.format("update %s content %s", rid, convertObjectToJsonString(object)))
+                        .elementAt(0);
     }
 
     public <T extends Vertex> Mono<Map<String, Object>> updateObject(T object) {
@@ -96,9 +111,9 @@ public class ArcadedbConnection implements AutoCloseable {
     }
 
     public <T> Mono<Map<String, Object>> mergeObject(String rid, T object) {
-        return isClosed ? Mono.empty() :
-            command(String.format("update %s merge %s", rid, convertObjectToJsonString(object)))
-            .elementAt(0);
+        return isClosed ? Mono.empty()
+                : command(String.format("update %s merge %s", rid, convertObjectToJsonString(object)))
+                        .elementAt(0);
     }
 
     public <T extends Vertex> Mono<Map<String, Object>> mergeObject(T object) {

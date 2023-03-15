@@ -1,12 +1,16 @@
 package org.makkiato.arcadedb.console.shell;
 
-import org.makkiato.arcadedb.client.WebClientFactory;
+import java.io.IOException;
+import java.time.Duration;
+import java.util.stream.Collectors;
+
 import org.makkiato.arcadedb.client.ArcadedbConnection;
 import org.makkiato.arcadedb.client.ArcadedbFactory;
 import org.makkiato.arcadedb.client.ArcadedbProperties;
-import org.makkiato.arcadedb.client.ArcadedbProperties.ConnectionProperties;
+import org.makkiato.arcadedb.client.WebClientFactory;
 import org.makkiato.arcadedb.client.exception.client.ArcadeClientConfigurationException;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.shell.Availability;
 import org.springframework.shell.component.SingleItemSelector;
 import org.springframework.shell.component.StringInput;
@@ -16,9 +20,7 @@ import org.springframework.shell.standard.AbstractShellComponent;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellMethodAvailability;
-
-import java.time.Duration;
-import java.util.stream.Collectors;
+import org.springframework.util.ResourceUtils;
 
 @ShellComponent
 public class ShellCommands extends AbstractShellComponent {
@@ -29,8 +31,10 @@ public class ShellCommands extends AbstractShellComponent {
     private ArcadedbProperties arcadedbProperties;
     private WebClientFactory arcadedbClient;
 
-    public ShellCommands(ArcadedbProperties arcadedbProperties, WebClientFactory arcadedbClient, ApplicationEventPublisher publisher) {
+    public ShellCommands(ArcadedbProperties arcadedbProperties, ArcadedbFactory arcadedbFactory, WebClientFactory arcadedbClient,
+            ApplicationEventPublisher publisher) {
         this.arcadedbProperties = arcadedbProperties;
+        this.arcadedbFactory = arcadedbFactory;
         this.arcadedbClient = arcadedbClient;
         this.publisher = publisher;
     }
@@ -46,7 +50,8 @@ public class ShellCommands extends AbstractShellComponent {
         var context = component.run(SingleItemSelector.SingleItemSelectorContext.empty());
         context.getResultItem().map(Itemable::getItem).ifPresent(serverName -> {
             try {
-                setArcadedbFactory(new ArcadedbFactory(arcadedbClient, connectionProperties.get(serverName)), serverName);
+                setArcadedbFactory(new ArcadedbFactory(arcadedbClient, connectionProperties.get(serverName)),
+                        serverName);
             } catch (ArcadeClientConfigurationException e) {
                 setArcadedbFactory(null, null);
                 throw new RuntimeException(e);
@@ -94,23 +99,41 @@ public class ShellCommands extends AbstractShellComponent {
         component.setResourceLoader(getResourceLoader());
         component.setTemplateExecutor(getTemplateExecutor());
         StringInput.StringInputContext context = component.run(StringInput.StringInputContext.empty());
-        return getConnection().command(context.getResultValue()).map(Object::toString).collect(Collectors.joining(", ")).block(CONNECTION_TIMEOUT);
+        return getConnection().command(context.getResultValue()).map(Object::toString).collect(Collectors.joining(", "))
+                .block(CONNECTION_TIMEOUT);
+    }
+
+    @ShellMethodAvailability("connectionAvailableCheck")
+    @ShellMethod(value = "Send the content of a sqlscript file to ArcadeDB", group = "Database")
+    public Boolean load(String path) throws IOException {
+        var file = ResourceUtils.getFile(path);
+        var script = new FileSystemResource(file);
+        return getConnection().script(script).block(CONNECTION_TIMEOUT);
     }
 
     public Availability connectionAvailableCheck() {
-        return getConnection() != null ? Availability.available() : Availability.unavailable("you have to close the current connection first");
+        return getConnection() != null ? Availability.available()
+                : Availability.unavailable("you have to close the current connection first");
     }
 
     public Availability connectionClosedAndFactoryAvailableCheck() {
-        return getArcadedbFactory() != null && getConnection() == null ? Availability.available() : Availability.unavailable("you have to close the current connection first");
+        return getArcadedbFactory() != null && getConnection() == null ? Availability.available()
+                : Availability.unavailable("you have to close the current connection first");
+    }
+
+    public Availability connectionClosedAndFactoryNotAvailableCheck() {
+        return getArcadedbFactory() == null && getConnection() == null ? Availability.available()
+                : Availability.unavailable("you have to close the current connection first");
     }
 
     public Availability connectionClosedCheck() {
-        return getConnection() == null ? Availability.available() : Availability.unavailable("you have to close the current connection first");
+        return getConnection() == null ? Availability.available()
+                : Availability.unavailable("you have to close the current connection first");
     }
 
     public Availability factoryAvailableCheck() {
-        return getArcadedbFactory() != null ? Availability.available() : Availability.unavailable("you have to select a server first");
+        return getArcadedbFactory() != null ? Availability.available()
+                : Availability.unavailable("you have to select a server first");
     }
 
     private ApplicationEventPublisher getPublisher() {
@@ -123,7 +146,8 @@ public class ShellCommands extends AbstractShellComponent {
 
     private void setConnection(ArcadedbConnection connection) {
         this.connection = connection;
-        getPublisher().publishEvent(new DatabaseUpdateEvent(this, connection != null ? connection.getDatabaseName() : null));
+        getPublisher()
+                .publishEvent(new DatabaseUpdateEvent(this, connection != null ? connection.getDatabaseName() : null));
     }
 
     public ArcadedbFactory getArcadedbFactory() {

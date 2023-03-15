@@ -14,14 +14,21 @@ public class ConsolePromptProvider implements PromptProvider {
     @Override
     public AttributedString getPrompt() {
         if (serverName != null) {
-            var prompt = new AttributedString(String.format("%s> ", serverName), AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN));
+            var prompt = new AttributedString(String.format("%s> ", serverName),
+                    AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN));
             if (databaseName != null) {
                 prompt = AttributedString.join(AttributedString.fromAnsi(""),
-                        prompt, new AttributedString(String.format("%s> ", databaseName), AttributedStyle.DEFAULT.foreground(AttributedStyle.MAGENTA)));
+                        prompt, new AttributedString(String.format("%s> ", databaseName),
+                                AttributedStyle.DEFAULT.foreground(AttributedStyle.MAGENTA)));
             }
             return prompt;
         } else {
-            return new AttributedString(">", AttributedStyle.DEFAULT.foreground(AttributedStyle.MAGENTA));
+            if (databaseName != null) {
+                return new AttributedString(String.format("%s> ", databaseName),
+                        AttributedStyle.DEFAULT.foreground(AttributedStyle.MAGENTA));
+            } else {
+                return new AttributedString(">", AttributedStyle.DEFAULT.foreground(AttributedStyle.MAGENTA));
+            }
         }
     }
 

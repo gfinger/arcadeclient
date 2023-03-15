@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 
+import java.io.IOException;
 import java.util.Map;
 
 import org.assertj.core.api.Condition;
@@ -24,6 +25,8 @@ import org.makkiato.arcadedb.client.exception.server.ValidationException;
 import org.makkiato.arcadedb.client.web.ArcadedbErrorResponseFilterImpl;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
@@ -46,6 +49,10 @@ public class ArcadedbConnectionIT {
         private static final String DB_NAME = "xyz-connection-test";
         @Autowired
         private ArcadedbFactory arcadedbFactory;
+
+        @Value("classpath:schema.sql")
+        private Resource sqlscript;
+
         private ArcadedbConnection connection;
         private ListAppender<ILoggingEvent> logWatcher;
 
@@ -302,5 +309,12 @@ public class ArcadedbConnectionIT {
                 };
                 assertThat(connection.script(script, Map.of("name", "Tester")).block())
                                 .isTrue();
+        }
+
+        @Test
+        @Order(18)
+        void sqlscript() throws IOException {
+            assertThat(connection.script(sqlscript, null).block())
+                .isTrue();
         }
 }
