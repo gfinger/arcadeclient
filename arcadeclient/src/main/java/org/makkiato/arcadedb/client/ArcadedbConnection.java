@@ -53,9 +53,13 @@ public class ArcadedbConnection implements AutoCloseable {
     }
 
     public Mono<Boolean> script(Resource resource, Map<String, Object> params) throws IOException {
+        return script("sql", resource, null);
+    }
+
+    public Mono<Boolean> script(String language, Resource resource, Map<String, Object> params) throws IOException {
         var command = resource.getContentAsString(Charset.defaultCharset());
         return isClosed ? Mono.just(false)
-                : new CommandExchange("sqlscript", command, databaseName, params, webClient)
+                : new CommandExchange(language, command, databaseName, params, webClient)
                         .exchange()
                         .hasElement();
     }
