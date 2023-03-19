@@ -100,6 +100,10 @@ public class GraphMappingIT {
                 .has(new Condition<Book>(
                         book -> book.getAuthors().length == 1 && book.getAuthors()[0].getName().equals("Thomas Mann"),
                         "has author 'Thomas Mann'"))
+                .has(new Condition<Book>(book -> book.getRid() != null, "has @rid"))
+                .has(new Condition<Book>(book -> book.getCat().equals("v"), "has @v"))
+                .has(new Condition<Book>(book -> book.getType().equals("Book"),
+                        "has @type"))
                 .isInstanceOf(Book.class);
 
         assertThat(connection.selectObject("graphql", "{bookByAuthor(name:\"Thomas Mann\")}",
@@ -109,6 +113,10 @@ public class GraphMappingIT {
                 .has(new Condition<Book>(
                         book -> book.getAuthors().length == 1 && book.getAuthors()[0].getName().equals("Thomas Mann"),
                         "has author 'Thomas Mann'"))
+                .has(new Condition<Book>(book -> book.getRid() != null, "has @rid"))
+                .has(new Condition<Book>(book -> book.getCat().equals("v"), "has @v"))
+                .has(new Condition<Book>(book -> book.getType().equals("Book"),
+                        "has @type"))
                 .isInstanceOf(Book.class);
     }
 }
