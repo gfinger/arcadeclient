@@ -2,6 +2,7 @@ package org.makkiato.arcadedb.client.web;
 
 import org.makkiato.arcadedb.client.exception.server.CommandExecutionException;
 import org.makkiato.arcadedb.client.exception.server.ConcurrentModificationException;
+import org.makkiato.arcadedb.client.exception.server.DatabaseIsClosedException;
 import org.makkiato.arcadedb.client.exception.server.DatabaseOperationException;
 import org.makkiato.arcadedb.client.exception.server.DuplicatedKeyException;
 import org.makkiato.arcadedb.client.exception.server.IllegalArgumentException;
@@ -74,6 +75,8 @@ public class ArcadedbErrorResponseFilterImpl implements ArcadedbErrorResponseFil
                                 status.value())));
                     case "com.arcadedb.exception.ValidationException" ->
                         Mono.error(new ValidationException(error.getDetail(), status.value()));
+                    case "com.arcadedb.exception.DatabaseIsClosedException" ->
+                        Mono.error(new DatabaseIsClosedException(error.getDetail(), status.value()));
                     default ->
                         Mono.error(new RemoteException(
                                 String.format("Error on executing remote operation %s",

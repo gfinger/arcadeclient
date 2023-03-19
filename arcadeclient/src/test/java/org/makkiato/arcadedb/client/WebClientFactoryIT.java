@@ -16,7 +16,8 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
     "org.makkiato.arcadedb.connections.default.port=2480",
     "org.makkiato.arcadedb.connections.default.username=root",
     "org.makkiato.arcadedb.connections.default.password=playwithdata",
-    "org.makkiato.arcadedb.connections.default.leader-preferred=true"
+    "org.makkiato.arcadedb.connections.default.leader-preferred=true",
+    "org.makkiato.arcadedb.connections.default.database=xyz-webclientfactory-test"
 })
 class WebClientFactoryIT {
     @Autowired

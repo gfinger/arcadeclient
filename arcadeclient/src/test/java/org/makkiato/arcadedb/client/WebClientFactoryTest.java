@@ -1,9 +1,11 @@
 package org.makkiato.arcadedb.client;
 
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.catchThrowable;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Before;
+import java.io.IOException;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,11 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-import java.io.IOException;
-
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.catchThrowable;
-import static org.junit.jupiter.api.Assertions.*;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 
 @SpringJUnitConfig(ArcadedbAutoConfiguration.class)
 @TestPropertySource(properties = {
@@ -95,7 +94,8 @@ class WebClientFactoryTest {
 
     @Test
     void missingServerInfo() {
-        var throwable = catchThrowable(() -> arcadedbClient.serverInfo(properties.getConnectionPropertiesFor("mock1"), "cluster"));
+        var throwable = catchThrowable(
+                () -> arcadedbClient.serverInfo(properties.getConnectionPropertiesFor("mock1"), "cluster"));
         assertThat(throwable).isInstanceOf(ArcadeClientException.class).hasMessage("Missing configuration for " +
                 "database: %s", "mock1");
     }

@@ -26,14 +26,22 @@ public class ArcadedbAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public WebClientFactory arcadedbClient(ArcadedbErrorResponseFilter arcadedbErrorResponseFilter,
+    public WebClientFactory webClientFactory(ArcadedbErrorResponseFilter arcadedbErrorResponseFilter,
             WebClientSupplierStrategy webClientSupplierStrategy) {
         return new WebClientFactory(arcadedbErrorResponseFilter, webClientSupplierStrategy);
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public ArcadedbFactory arcadedbFactory(ArcadedbProperties properties, WebClientFactory arcadedbClient) {
-        return new ArcadedbFactory(arcadedbClient, properties.getConnectionPropertiesFor(null));
+    public ArcadedbFactory arcadedbFactory(ArcadedbProperties properties, WebClientFactory webClientFactory) {
+        return new ArcadedbFactory(webClientFactory, properties.getConnectionPropertiesFor(null));
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public ArcadedbConnection arcadedbConnection(ArcadedbProperties properties, WebClientFactory webClientFactory) {
+        var connectionProperties = properties.getConnectionPropertiesFor(null);
+        return new ArcadedbConnection(connectionProperties.getDatabase(),
+                webClientFactory.getWebClientSupplierFor(connectionProperties).get());
     }
 }

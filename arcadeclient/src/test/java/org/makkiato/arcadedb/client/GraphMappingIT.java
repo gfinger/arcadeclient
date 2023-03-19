@@ -29,6 +29,7 @@ import ch.qos.logback.core.read.ListAppender;
 @TestPropertySource(properties = {
         "org.makkiato.arcadedb.connections.arcadedb0.host=localhost",
         "org.makkiato.arcadedb.connections.arcadedb0.port=2480",
+        "org.makkiato.arcadedb.connections.arcadedb0.database=xyz-graphql-test",
         "org.makkiato.arcadedb.connections.arcadedb0.username=root",
         "org.makkiato.arcadedb.connections.arcadedb0.password=playwithdata",
         "org.makkiato.arcadedb.connections.arcadedb0.leader-preferred=true"
@@ -36,30 +37,38 @@ import ch.qos.logback.core.read.ListAppender;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class GraphMappingIT {
-    private static final String DB_NAME = "xyz-graphql-test";
     @Autowired
     private ArcadedbFactory arcadedbFactory;
+    @Autowired
+    private ArcadedbConnection connection;
 
-    @Value("classpath:types.graphql")
+    @Value("classpath:types.graphqls")
     private Resource graphqlscript;
 
-    private ArcadedbConnection connection;
     private ListAppender<ILoggingEvent> logWatcher;
 
     @BeforeAll
     void init() {
-        arcadedbFactory.create(DB_NAME).block();
-        connection = arcadedbFactory.open(DB_NAME).block();
-
         var person = Person.builder().name("Thomas Mann").build();
         var book = Book.builder().title("Der Zauberberg").build();
-        connection.command("create vertex type Person").blockFirst();
-        connection.command("create vertex type Book").blockFirst();
-        connection.command("create edge type AuthorOf").blockFirst();
-        person = connection.insertObject(person).block();
-        book = connection.insertObject(book).block();
-        connection.command(String.format("create edge AuthorOf from %s to %s", person.getRid(), book.getRid()))
-                .blockFirst();
+
+        var createDb = arcadedbFactory.create();
+        var createPerson = connection.command("create vertex type Person");
+        var createBook = connection.command("create vertex type Book");
+        var createEdge = connection.command("create edge type AuthorOf");
+        var insertPerson = connection.insertObject(person);
+        var insertBook = connection.insertObject(book);
+
+        createDb.then(
+                createPerson.zipWith(createBook).then(
+                        createEdge.then(
+                                insertPerson.zipWith(insertBook).flatMap(
+                                        tuple -> connection
+                                                .command(String.format("create edge AuthorOf from %s to %s",
+                                                        tuple.getT1().getRid(),
+                                                        tuple.getT2().getRid()))
+                                                .then()))))
+                .block();
     }
 
     @BeforeEach
@@ -71,13 +80,13 @@ public class GraphMappingIT {
 
     @AfterAll
     void tearDown() {
-        arcadedbFactory.drop(DB_NAME).block();
+        arcadedbFactory.drop().block();
     }
 
     @Test
     @Order(1)
     void sqlscript() throws IOException {
-        assertThat(connection.script("graphql", graphqlscript, null).block())
+        assertThat(connection.script("graphql", graphqlscript, null, null).block())
                 .isTrue();
     }
 

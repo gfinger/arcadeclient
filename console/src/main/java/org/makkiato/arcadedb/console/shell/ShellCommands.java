@@ -62,32 +62,28 @@ public class ShellCommands extends AbstractShellComponent {
 
     @ShellMethodAvailability("factoryAvailableCheck")
     @ShellMethod(value = "Does a database exist in ArcadeDB", group = "Server")
-    public Boolean exists(String dbName) throws ArcadeClientConfigurationException {
-        return this.getArcadedbFactory().exists(dbName).block(CONNECTION_TIMEOUT);
+    public Boolean exists() throws ArcadeClientConfigurationException {
+        return this.getArcadedbFactory().exists().block(CONNECTION_TIMEOUT);
     }
 
     @ShellMethodAvailability("factoryAvailableCheck")
     @ShellMethod(value = "Create a database in ArcadeDB", group = "Server")
-    public String create(String dbName) {
-        setConnection(null);
-        var connection = getArcadedbFactory().create(dbName).block(CONNECTION_TIMEOUT);
-        setConnection(connection);
-        return String.format("created %s", dbName);
+    public String create() {
+        var ok = getArcadedbFactory().create().block(CONNECTION_TIMEOUT);
+        return ok ? "db created" : "error creating db";
     }
 
     @ShellMethodAvailability("connectionClosedAndFactoryAvailableCheck")
     @ShellMethod(value = "Open a database in ArcadeDB", group = "Server")
-    public String open(String dbName) {
-        setConnection(null);
-        var connection = getArcadedbFactory().open(dbName).block(CONNECTION_TIMEOUT);
-        setConnection(connection);
-        return String.format("opened %s", dbName);
+    public String open() {
+        var ok = getArcadedbFactory().open().block(CONNECTION_TIMEOUT);
+        return ok? "db opened":"error opening db";
     }
 
     @ShellMethodAvailability("connectionAvailableCheck")
     @ShellMethod(value = "Close a database in ArcadeDB", group = "Server")
     public String close() {
-        getConnection().close();
+        getArcadedbFactory().close();
         setConnection(null);
         return "closed";
     }

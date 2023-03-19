@@ -1,11 +1,13 @@
 package org.makkiato.arcadedb.client;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.makkiato.arcadedb.client.exception.client.ArcadeClientConfigurationException;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,7 +19,6 @@ import lombok.Setter;
 public class ArcadedbProperties {
     public static final int DEFAULT_PORT = 2480;
     public static final String DEFAULT_HOST = "localhost";
-    public static final String DEFAULT_USERNAME = "root";
     public static final String DEFAULT_CONFIGURATION_NAME = "default";
     public static final Integer MAX_SERVER_INFO_RETRIES = 3;
     public static final Integer CONNECTION_TIMEOUT_SECS = 3;
@@ -44,7 +45,7 @@ public class ArcadedbProperties {
 
     public ConnectionProperties getConnectionPropertiesFor(String connectionName) {
         ConnectionProperties cp = null;
-        var connectionPropertiesMap = getConnectionPropertiesMap(); 
+        var connectionPropertiesMap = getConnectionPropertiesMap();
         if (connectionName != null) {
             cp = connectionPropertiesMap.get(connectionName);
         } else if (connectionPropertiesMap.containsKey(defaultConfigurationName)) {
@@ -86,13 +87,23 @@ public class ArcadedbProperties {
         /**
          * Username to be used for connection.
          */
-        private String username = DEFAULT_USERNAME;
+        @NotBlank
+        private String username;
         /**
          * Password of user.
          */
-
-        private String password = "";
+        @NotBlank
+        private String password;
+        /**
+         * Name of default database
+         */
+        @NotBlank
+        private String database;
         private Integer maxServerInfoRetries = MAX_SERVER_INFO_RETRIES;
         private Integer connectionTimeoutSecs = CONNECTION_TIMEOUT_SECS;
+
+        public Duration getConnectionTimeout() {
+            return Duration.ofSeconds(getConnectionTimeoutSecs());
+        }
     }
 }

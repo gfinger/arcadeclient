@@ -15,7 +15,6 @@ import org.makkiato.arcadedb.client.web.request.CommandExchange;
 import org.makkiato.arcadedb.client.web.request.CommitTAExchange;
 import org.makkiato.arcadedb.client.web.request.QueryExchange;
 import org.makkiato.arcadedb.client.web.request.RollbackTAExchange;
-import org.makkiato.arcadedb.client.web.request.ServerExchange;
 import org.makkiato.arcadedb.client.web.response.EmptyResponse;
 import org.springframework.core.io.Resource;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -29,16 +28,15 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * Represents one session on the ArcadeDB.
- * This class is not thread-safe!
+ * Covenience layer on top of http-requests to the ArcadeDB.
+ * This object is immutable.
  */
-public class ArcadedbConnection implements AutoCloseable {
+public class ArcadedbConnection {
     private static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(2);
     private static final String ARCADEDB_SESSION_ID = "arcadedb-session-id";
     @Getter
     private final String databaseName;
-    private WebClient webClient;
-    private boolean isClosed = false;
+    private final WebClient webClient;
     private final ObjectMapper objectMapper;
 
     public ArcadedbConnection(String databaseName, WebClient webClient) {
@@ -49,116 +47,195 @@ public class ArcadedbConnection implements AutoCloseable {
     }
 
     public Mono<Boolean> script(Resource resource) throws IOException {
-        return script(resource, null);
+        return script(resource, (Map<String, Object>) null);
+    }
+
+    public Mono<Boolean> script(Resource resource, TransactionHandle transactionHandle) throws IOException {
+        return script(resource, null, transactionHandle);
     }
 
     public Mono<Boolean> script(Resource resource, Map<String, Object> params) throws IOException {
-        return script("sql", resource, null);
+        return script(resource, params, null);
     }
 
-    public Mono<Boolean> script(String language, Resource resource, Map<String, Object> params) throws IOException {
+    public Mono<Boolean> script(Resource resource, Map<String, Object> params, TransactionHandle transactionHandle)
+            throws IOException {
+        var commands = Arrays.stream(resource.getContentAsString(Charset.defaultCharset()).split(";"))
+                .map(line -> line.trim())
+                .toArray(String[]::new);
+        return script(commands, params, transactionHandle);
+    }
+
+    public Mono<Boolean> script(String language, Resource resource, Map<String, Object> params,
+            TransactionHandle transactionHandle) throws IOException {
         var command = resource.getContentAsString(Charset.defaultCharset());
-        return isClosed ? Mono.just(false)
-                : new CommandExchange(language, command, databaseName, params, webClient)
-                        .exchange()
-                        .hasElement();
+        return new CommandExchange(language, command, databaseName, params,
+                transactionHandle != null ? transactionHandle.webClient() : webClient)
+                .exchange()
+                .hasElement();
     }
 
-    public Mono<Boolean> script(String[] commands) {
-        return script(commands, null);
+    public Mono<Boolean> script(String[] commands, TransactionHandle transactionHandle) {
+        return script(commands, null, transactionHandle);
     }
-    
+
     public Mono<Boolean> script(String[] commands, Map<String, Object> params) {
+        return script(commands, params, null);
+    }
+
+    public Mono<Boolean> script(String[] commands, Map<String, Object> params, TransactionHandle transactionHandle) {
         var command = Arrays.stream(commands).map(c -> String.format("\"%s\"", c)).collect(Collectors.joining(";"));
-        return isClosed ? Mono.just(false)
-                : new CommandExchange("sqlscript", command, databaseName, params, webClient)
-                        .exchange()
-                        .hasElement();
+        return new CommandExchange("sqlscript", command, databaseName, params,
+                transactionHandle != null ? transactionHandle.webClient() : webClient)
+                .exchange()
+                .hasElement();
     }
 
     public Flux<Map<String, Object>> command(String command) {
-        return command(command, null);
+        return command("sql", command, null, null);
+    }
+
+    public Flux<Map<String, Object>> command(String command, TransactionHandle transactionHandle) {
+        return command(command, null, transactionHandle);
     }
 
     public Flux<Map<String, Object>> command(String command, Map<String, Object> params) {
-        return command("sql", command, params);
+        return command("sql", command, params, null);
+    }
+
+    public Flux<Map<String, Object>> command(String command, Map<String, Object> params,
+            TransactionHandle transactionHandle) {
+        return command("sql", command, params, transactionHandle);
     }
 
     public Flux<Map<String, Object>> command(String language, String command, Map<String, Object> params) {
-        return isClosed ? Flux.empty()
-                : new CommandExchange(language, command, databaseName, params, webClient)
-                        .exchange()
-                        .map(response -> response.result())
-                        .flatMapMany(Flux::fromArray);
+        return command(language, command, params);
+    }
+
+    public Flux<Map<String, Object>> command(String language, String command, Map<String, Object> params,
+            TransactionHandle transactionHandle) {
+        return new CommandExchange(language, command, databaseName, params,
+                transactionHandle != null ? transactionHandle.webClient() : webClient)
+                .exchange()
+                .map(response -> response.result())
+                .flatMapMany(Flux::fromArray);
+    }
+
+    public <T> Mono<T> insertObject(String documentName, T object) {
+        return insertObject(documentName, object, null);
     }
 
     @SuppressWarnings("unchecked")
-    public <T> Mono<T> insertObject(String documentName, T object) {
-        return isClosed ? Mono.empty()
-                : command(String.format("insert into %s content %s", documentName, convertObjectToJsonString(object)))
-                        .elementAt(0)
-                        .map(result -> convertMapToObject((Class<T>) object.getClass(), result));
+    public <T> Mono<T> insertObject(String documentName, T object, TransactionHandle transactionHandle) {
+        return command(String.format("insert into %s content %s", documentName, convertObjectToJsonString(object)),
+                transactionHandle)
+                .elementAt(0)
+                .map(result -> convertMapToObject((Class<T>) object.getClass(), result));
     }
 
     public <T extends Vertex> Mono<T> insertObject(T object) {
-        return insertObject(object.getType(), object);
+        return insertObject(object, null);
+    }
+
+    public <T extends Vertex> Mono<T> insertObject(T object, TransactionHandle transactionHandle) {
+        return insertObject(object.getType(), object, transactionHandle);
     }
 
     public <T> Mono<Map<String, Object>> updateObject(String rid, T object) {
-        return isClosed ? Mono.empty()
-                : command(String.format("update %s content %s", rid, convertObjectToJsonString(object)))
-                        .elementAt(0);
+        return updateObject(rid, object, null);
+    }
+
+    public <T> Mono<Map<String, Object>> updateObject(String rid, T object, TransactionHandle transactionHandle) {
+        return command(String.format("update %s content %s", rid, convertObjectToJsonString(object)))
+                .elementAt(0);
     }
 
     public <T extends Vertex> Mono<Map<String, Object>> updateObject(T object) {
-        return updateObject(object.getRid(), object);
+        return updateObject(object, null);
     }
 
-    public <T> Mono<Map<String, Object>> mergeObject(String rid, T object) {
-        return isClosed ? Mono.empty()
-                : command(String.format("update %s merge %s", rid, convertObjectToJsonString(object)))
-                        .elementAt(0);
+    public <T extends Vertex> Mono<Map<String, Object>> updateObject(T object, TransactionHandle transactionHandle) {
+        return updateObject(object.getRid(), object, transactionHandle);
     }
 
     public <T extends Vertex> Mono<Map<String, Object>> mergeObject(T object) {
-        return updateObject(object.getRid(), object);
+        return updateObject(object, null);
+    }
+
+    public <T extends Vertex> Mono<Map<String, Object>> mergeObject(T object, TransactionHandle transactionHandle) {
+        return updateObject(object.getRid(), object, transactionHandle);
+    }
+
+    public <T> Mono<Map<String, Object>> mergeObject(String rid, T object) {
+        return command(String.format("update %s merge %s", rid, convertObjectToJsonString(object)))
+                .elementAt(0);
     }
 
     public <T> Flux<T> selectObject(String command,
             Class<T> objectType) {
+        return selectObject(command, objectType, null);
+    }
+
+    public <T> Flux<T> selectObject(String command,
+            Class<T> objectType, TransactionHandle transactionHandle) {
         return selectObject("sql", command, null, objectType, (x, y) -> convertMapToObject(x, y));
     }
 
     public <T> Flux<T> selectObject(String command, Map<String, Object> params,
             Class<T> objectType) {
-        return selectObject("sql", command, params, objectType, (x, y) -> convertMapToObject(x, y));
+        return selectObject(command, params, objectType, null);
     }
 
-    public <T> Mono<T> findById(String rid, Class<T> objectType) {
-        return selectObject(String.format("select from [%s]", rid), objectType).elementAt(0);
+    public <T> Flux<T> selectObject(String command, Map<String, Object> params,
+            Class<T> objectType, TransactionHandle transactionHandle) {
+        return selectObject("sql", command, params, objectType, (x, y) -> convertMapToObject(x, y));
     }
 
     public <T> Flux<T> selectObject(String language, String command,
             Class<T> objectType) {
+        return selectObject(language, command, objectType, (TransactionHandle) null);
+    }
+
+    public <T> Flux<T> selectObject(String language, String command,
+            Class<T> objectType, TransactionHandle transactionHandle) {
         return selectObject(language, command, null, objectType, (x, y) -> convertMapToObject(x, y));
     }
 
     public <T> Flux<T> selectObject(String language, String command, Map<String, Object> params,
             Class<T> objectType) {
-        return selectObject(language, command, params, objectType, (x, y) -> convertMapToObject(x, y));
+        return selectObject(language, command, params, objectType, (TransactionHandle) null);
+    }
+
+    public <T> Flux<T> selectObject(String language, String command, Map<String, Object> params,
+            Class<T> objectType, TransactionHandle transactionHandle) {
+        return selectObject(language, command, params, objectType, (x, y) -> convertMapToObject(x, y),
+                transactionHandle);
     }
 
     public <T> Flux<T> selectObject(String language, String command, Map<String, Object> params,
             Class<T> objectType, BiFunction<Class<T>, Map<String, Object>, T> mapper) {
-        return isClosed ? Flux.empty()
-                : new CommandExchange(language, command, databaseName, params, webClient)
-                        .exchange()
-                        .map(response -> response.result())
-                        .map(resultArray -> Arrays.stream(resultArray)
-                                .map(result -> mapper.apply(objectType, result))
-                                .collect(Collectors.toList()))
-                        .flatMapMany(list -> Flux.fromIterable(list));
+        return selectObject(language, command, params, objectType, mapper, null);
+    }
 
+    public <T> Flux<T> selectObject(String language, String command, Map<String, Object> params,
+            Class<T> objectType, BiFunction<Class<T>, Map<String, Object>, T> mapper,
+            TransactionHandle transactionHandle) {
+        return new CommandExchange(language, command, databaseName, params, webClient)
+                .exchange()
+                .map(response -> response.result())
+                .map(resultArray -> Arrays.stream(resultArray)
+                        .map(result -> mapper.apply(objectType, result))
+                        .collect(Collectors.toList()))
+                .flatMapMany(list -> Flux.fromIterable(list));
+
+    }
+
+    public <T> Mono<T> findById(String rid, Class<T> objectType) {
+        return findById(rid, objectType, null);
+    }
+
+    public <T> Mono<T> findById(String rid, Class<T> objectType, TransactionHandle transactionHandle) {
+        return selectObject(String.format("select from [%s]", rid), objectType, transactionHandle).elementAt(0);
     }
 
     private <T> T convertMapToObject(Class<T> objectType, Map<String, Object> map) {
@@ -174,21 +251,13 @@ public class ArcadedbConnection implements AutoCloseable {
     }
 
     public Flux<Map<String, Object>> query(String query) {
-        return isClosed ? Flux.empty()
-                : new QueryExchange("sql", query, databaseName, webClient)
-                        .exchange()
-                        .map(response -> response.result())
-                        .flatMapMany(Flux::fromArray);
+        return new QueryExchange("sql", query, databaseName, webClient)
+                .exchange()
+                .map(response -> response.result())
+                .flatMapMany(Flux::fromArray);
     }
 
-    public void close() {
-        this.isClosed = true;
-        new ServerExchange("sql", String.format("close database %s", databaseName), webClient)
-                .exchange().map(response -> response.result().equalsIgnoreCase("ok"))
-                .block(CONNECTION_TIMEOUT);
-    }
-
-    public Boolean beginTransaction() {
+    public Optional<TransactionHandle> beginTransaction() {
         Optional<String> sessionId = new BeginTAExchange(databaseName, webClient).exchange()
                 .map(EmptyResponse::headers)
                 .filter(header -> header.containsKey(ARCADEDB_SESSION_ID))
@@ -196,21 +265,20 @@ public class ArcadedbConnection implements AutoCloseable {
                 .filter(item -> !item.isEmpty())
                 .map(item -> item.get(0))
                 .blockOptional(CONNECTION_TIMEOUT);
-        webClient = webClient.mutate().defaultHeader(ARCADEDB_SESSION_ID, sessionId.orElse("")).build();
-        return sessionId.isPresent();
+        return sessionId.map(id -> new TransactionHandle(id,
+                webClient.mutate().defaultHeader(ARCADEDB_SESSION_ID, id).build()));
     }
 
-    public Boolean commitTransaction() {
-        Optional<EmptyResponse> response = new CommitTAExchange(databaseName, webClient).exchange()
+    public Boolean commitTransaction(TransactionHandle transactionHandle) {
+        Optional<EmptyResponse> response = new CommitTAExchange(databaseName, transactionHandle.webClient()).exchange()
                 .blockOptional(CONNECTION_TIMEOUT);
-        webClient = webClient.mutate().defaultHeader(ARCADEDB_SESSION_ID, "").build();
         return response.isPresent();
     }
 
-    public Boolean rollbackTransaction() {
-        Optional<EmptyResponse> response = new RollbackTAExchange(databaseName, webClient).exchange()
+    public Boolean rollbackTransaction(TransactionHandle transactionHandle) {
+        Optional<EmptyResponse> response = new RollbackTAExchange(databaseName, transactionHandle.webClient())
+                .exchange()
                 .blockOptional(CONNECTION_TIMEOUT);
-        webClient = webClient.mutate().defaultHeader(ARCADEDB_SESSION_ID, "").build();
         return response.isPresent();
     }
 }

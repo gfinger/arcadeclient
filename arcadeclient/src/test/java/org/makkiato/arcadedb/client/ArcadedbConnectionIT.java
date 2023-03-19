@@ -39,6 +39,7 @@ import ch.qos.logback.core.read.ListAppender;
 @TestPropertySource(properties = {
                 "org.makkiato.arcadedb.connections.arcadedb0.host=localhost",
                 "org.makkiato.arcadedb.connections.arcadedb0.port=2480",
+                "org.makkiato.arcadedb.connections.arcadedb0.database=xyz-connection-test",
                 "org.makkiato.arcadedb.connections.arcadedb0.username=root",
                 "org.makkiato.arcadedb.connections.arcadedb0.password=playwithdata",
                 "org.makkiato.arcadedb.connections.arcadedb0.leader-preferred=true"
@@ -46,24 +47,24 @@ import ch.qos.logback.core.read.ListAppender;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ArcadedbConnectionIT {
-        private static final String DB_NAME = "xyz-connection-test";
         @Autowired
         private ArcadedbFactory arcadedbFactory;
+
+        @Autowired
+        private ArcadedbConnection connection;
 
         @Value("classpath:schema.sql")
         private Resource sqlscript;
 
-        private ArcadedbConnection connection;
         private ListAppender<ILoggingEvent> logWatcher;
 
         @BeforeAll
         void init() {
-                arcadedbFactory.create(DB_NAME).block();
+            arcadedbFactory.create().block();
         }
 
         @BeforeEach
         void initEach() {
-                connection = arcadedbFactory.open(DB_NAME).block();
                 logWatcher = new ListAppender<>();
                 logWatcher.start();
                 ((Logger) LoggerFactory.getLogger(ArcadedbErrorResponseFilterImpl.class)).addAppender(logWatcher);
@@ -71,7 +72,7 @@ public class ArcadedbConnectionIT {
 
         @AfterAll
         void tearDown() {
-                arcadedbFactory.drop(DB_NAME).block();
+                arcadedbFactory.drop().block();
         }
 
         @Test
@@ -314,7 +315,7 @@ public class ArcadedbConnectionIT {
         @Test
         @Order(18)
         void sqlscript() throws IOException {
-            assertThat(connection.script(sqlscript, null).block())
+            assertThat(connection.script(sqlscript).block())
                 .isTrue();
         }
 }

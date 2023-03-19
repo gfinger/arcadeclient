@@ -5,6 +5,7 @@ org:
             connection:
                 host: localhost
                 port: 2480
+                database: test
                 username: root
                 password: playwithdata
                 leader-preferred: true
