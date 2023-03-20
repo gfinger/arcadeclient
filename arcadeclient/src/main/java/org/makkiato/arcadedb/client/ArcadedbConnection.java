@@ -23,7 +23,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import lombok.Getter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -32,11 +31,10 @@ import reactor.core.publisher.Mono;
  * This object is immutable.
  */
 public class ArcadedbConnection {
-    private static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(2);
-    private static final String ARCADEDB_SESSION_ID = "arcadedb-session-id";
-    @Getter
-    private final String databaseName;
-    private final WebClient webClient;
+    protected static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(2);
+    protected static final String ARCADEDB_SESSION_ID = "arcadedb-session-id";
+    protected final String databaseName;
+    protected final WebClient webClient;
     private final ObjectMapper objectMapper;
 
     public ArcadedbConnection(String databaseName, WebClient webClient) {
@@ -220,7 +218,8 @@ public class ArcadedbConnection {
     public <T> Flux<T> selectObject(String language, String command, Map<String, Object> params,
             Class<T> objectType, BiFunction<Class<T>, Map<String, Object>, T> mapper,
             TransactionHandle transactionHandle) {
-        return new CommandExchange(language, command, databaseName, params, webClient)
+        return new CommandExchange(language, command, databaseName, params,
+                transactionHandle != null ? transactionHandle.webClient() : webClient)
                 .exchange()
                 .map(response -> response.result())
                 .map(resultArray -> Arrays.stream(resultArray)
@@ -267,6 +266,18 @@ public class ArcadedbConnection {
                 .blockOptional(CONNECTION_TIMEOUT);
         return sessionId.map(id -> new TransactionHandle(id,
                 webClient.mutate().defaultHeader(ARCADEDB_SESSION_ID, id).build()));
+    }
+
+    public TransactionalConnection transactional() {
+        return new BeginTAExchange(databaseName, webClient).exchange()
+                .map(EmptyResponse::headers)
+                .filter(header -> header.containsKey(ARCADEDB_SESSION_ID))
+                .map(header -> header.get(ARCADEDB_SESSION_ID))
+                .filter(item -> !item.isEmpty())
+                .map(item -> item.get(0))
+                .map(id -> new TransactionalConnection(databaseName,
+                        webClient.mutate().defaultHeader(ARCADEDB_SESSION_ID, id).build()))
+                .block(CONNECTION_TIMEOUT);
     }
 
     public Boolean commitTransaction(TransactionHandle transactionHandle) {
