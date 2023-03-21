@@ -1,6 +1,6 @@
 package org.makkiato.arcadedb.console.shell;
 
-import org.makkiato.arcadeclient.data.core.ArcadedbConnection;
+import org.makkiato.arcadeclient.data.core.ArcadedbTemplate;
 import org.makkiato.arcadeclient.data.core.ArcadedbFactory;
 import org.makkiato.arcadeclient.data.core.ArcadedbProperties;
 import org.makkiato.arcadeclient.data.core.WebClientFactory;
@@ -27,7 +27,7 @@ public class ShellCommands extends AbstractShellComponent {
     private static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(2);
     private final ApplicationEventPublisher publisher;
     private ArcadedbFactory arcadedbFactory;
-    private ArcadedbConnection connection = null;
+    private ArcadedbTemplate connection = null;
     private ArcadedbProperties arcadedbProperties;
     private WebClientFactory arcadedbClient;
 
@@ -136,11 +136,11 @@ public class ShellCommands extends AbstractShellComponent {
         return publisher;
     }
 
-    private ArcadedbConnection getConnection() {
+    private ArcadedbTemplate getConnection() {
         return connection;
     }
 
-    private void setConnection(ArcadedbConnection connection) {
+    private void setConnection(ArcadedbTemplate connection) {
         this.connection = connection;
         getPublisher()
                 .publishEvent(new DatabaseUpdateEvent(this, null));

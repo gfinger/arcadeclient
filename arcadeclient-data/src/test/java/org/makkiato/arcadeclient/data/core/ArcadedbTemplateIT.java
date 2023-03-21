@@ -1,26 +1,13 @@
 package org.makkiato.arcadeclient.data.core;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.entry;
-
-import java.io.IOException;
-import java.util.Map;
-
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import org.assertj.core.api.Condition;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestMethodOrder;
-import org.makkiato.arcadeclient.data.exception.server.CommandExecutionException;
-import org.makkiato.arcadeclient.data.exception.server.DuplicatedKeyException;
-import org.makkiato.arcadeclient.data.exception.server.ParseException;
-import org.makkiato.arcadeclient.data.exception.server.SchemaException;
-import org.makkiato.arcadeclient.data.exception.server.ValidationException;
+import org.junit.jupiter.api.*;
+import org.makkiato.arcadeclient.data.exception.server.IllegalArgumentException;
+import org.makkiato.arcadeclient.data.exception.server.*;
 import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilterImpl;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,13 +15,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import org.makkiato.arcadeclient.data.exception.server.IllegalArgumentException;
-
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
 import reactor.test.StepVerifier;
+
+import java.io.IOException;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.*;
 
 @SpringJUnitConfig(TestConfiguration.class)
 @TestPropertySource(properties = {
@@ -47,12 +33,12 @@ import reactor.test.StepVerifier;
 })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class ArcadedbConnectionIT {
+public class ArcadedbTemplateIT {
     @Autowired
     private ArcadedbFactory arcadedbFactory;
 
     @Autowired
-    private ArcadedbConnection connection;
+    private ArcadedbTemplate template;
 
     @Value("classpath:schema.sql")
     private Resource sqlscript;
@@ -79,9 +65,9 @@ public class ArcadedbConnectionIT {
     @Test
     @Order(1)
     void createVertexType() {
-        assertThat(connection.command("create vertex type Customer").blockFirst()).contains(entry("operation",
+        assertThat(template.command("create vertex type Customer").blockFirst()).contains(entry("operation",
                 "create vertex type"), entry("typeName", "Customer"));
-        assertThatThrownBy(() -> connection.command("create vertex type Customer").blockFirst())
+        assertThatThrownBy(() -> template.command("create vertex type Customer").blockFirst())
                 .isInstanceOf(CommandExecutionException.class).hasMessageContaining("already exists");
         assertThat(logWatcher.list.stream()
                 .filter(event -> event.getLevel()
@@ -89,14 +75,14 @@ public class ArcadedbConnectionIT {
                         && event.getFormattedMessage().contains("already exists")))
                 .hasSize(1);
 
-        assertThat(connection.command("create vertex type Client").blockFirst()).contains(entry("operation",
+        assertThat(template.command("create vertex type Client").blockFirst()).contains(entry("operation",
                 "create vertex type"), entry("typeName", "Client"));
     }
 
     @Test
     @Order(2)
     void wrongSqlSyntax() {
-        assertThatThrownBy(() -> connection.command("create new vertex type Customer").blockFirst())
+        assertThatThrownBy(() -> template.command("create new vertex type Customer").blockFirst())
                 .isInstanceOf(ParseException.class).hasMessageContaining("Was expecting one of");
         assertThat(logWatcher.list.stream()
                 .filter(event -> event.getLevel()
@@ -108,10 +94,10 @@ public class ArcadedbConnectionIT {
     @Test
     @Order(3)
     void createProperty() {
-        assertThat(connection.command("create property Customer.name String (mandatory true, notnull true)")
+        assertThat(template.command("create property Customer.name String (mandatory true, notnull true)")
                 .blockFirst()).contains(entry("operation",
                         "create property"), entry("typeName", "Customer"));
-        assertThatThrownBy(() -> connection
+        assertThatThrownBy(() -> template
                 .command("create property Customer.name String (mandatory true, notnull " +
                         "true)")
                 .blockFirst())
@@ -126,7 +112,7 @@ public class ArcadedbConnectionIT {
     @Test
     @Order(4)
     void createIndex() {
-        assertThat(connection.command("create index on Customer (name) unique").blockFirst()).contains(entry(
+        assertThat(template.command("create index on Customer (name) unique").blockFirst()).contains(entry(
                 "operation",
                 "create index"), entry("name", "Customer[name]"), entry("type", "LSM_TREE"),
                 entry("totalIndexed", 0));
@@ -135,26 +121,26 @@ public class ArcadedbConnectionIT {
     @Test
     @Order(5)
     void insert() {
-        assertThat(connection.command("insert into Customer set name = 'Tester'").blockFirst())
+        assertThat(template.command("insert into Customer set name = 'Tester'").blockFirst())
                 .contains(entry("@rid", "#1:0"), entry("@type", "Customer"), entry("@cat", "v"),
                         entry("@out", 0),
                         entry("@in", 0), entry("name", "Tester"));
 
-        assertThatThrownBy(() -> connection.command("insert into Person set name = 'Tester'").blockFirst())
+        assertThatThrownBy(() -> template.command("insert into Person set name = 'Tester'").blockFirst())
                 .isInstanceOf(SchemaException.class).hasMessageContaining("was not found");
         assertThat(logWatcher.list.stream()
                 .filter(event -> event.getLevel()
                         .equals(Level.ERROR)
                         && event.getFormattedMessage().contains("was not found")));
 
-        assertThatThrownBy(() -> connection.command("insert into Customer set name = 'Tester'").blockFirst())
+        assertThatThrownBy(() -> template.command("insert into Customer set name = 'Tester'").blockFirst())
                 .isInstanceOf(DuplicatedKeyException.class).hasMessageContaining("Duplicated key");
         assertThat(logWatcher.list.stream()
                 .filter(event -> event.getLevel()
                         .equals(Level.ERROR)
                         && event.getFormattedMessage().contains("Duplicated key")));
 
-        assertThatThrownBy(() -> connection.command("insert into Customer set name = null").blockFirst())
+        assertThatThrownBy(() -> template.command("insert into Customer set name = null").blockFirst())
                 .isInstanceOf(ValidationException.class).hasMessageContaining("cannot be null");
         assertThat(logWatcher.list.stream()
                 .filter(event -> event.getLevel()
@@ -165,14 +151,14 @@ public class ArcadedbConnectionIT {
     @Test
     @Order(6)
     void update() {
-        assertThat(connection.command("update Customer set age = 25 where name = 'Tester'").blockFirst())
+        assertThat(template.command("update Customer set age = 25 where name = 'Tester'").blockFirst())
                 .containsEntry("count", 1);
     }
 
     @Test
     @Order(7)
     void insertWithParameters() {
-        assertThat(connection.command("insert into Customer set name = :name", Map.of("name", "Cookie Factory"))
+        assertThat(template.command("insert into Customer set name = :name", Map.of("name", "Cookie Factory"))
                 .blockFirst())
                 .contains(entry("@rid", "#7:0"), entry("@type", "Customer"), entry("@cat", "v"),
                         entry("@out", 0),
@@ -186,7 +172,7 @@ public class ArcadedbConnectionIT {
         var customer1 = new Customer();
         customer1.setAddress(address);
         customer1.setName("ABC Electronics");
-        assertThat(connection.insertObject("Customer", customer1).block())
+        assertThat(template.insertDocument("Customer", customer1).block())
                 .hasFieldOrPropertyWithValue("name", "ABC Electronics")
                 .matches(cu -> cu.getCat() != null && cu.getRid() != null
                         && cu.getType().equals("Customer"), "no valid vertex")
@@ -196,10 +182,10 @@ public class ArcadedbConnectionIT {
         var customer2 = new Customer();
         customer2.setAddress(address);
         customer2.setName("XYZ Electronics");
-        assertThat(connection.insertObject(customer2).block())
+        assertThat(template.insertDocument(customer2).block())
                 .hasFieldOrPropertyWithValue("name", "XYZ Electronics")
                 .matches(cu -> cu.getCat() != null && cu.getRid() != null
-                        && cu.getType().equals("Client"), "no valid vertex")
+                        && cu.getType().equals("Customer"), "no valid vertex")
                 .matches(cu -> cu.getAddress() != null
                         && cu.getAddress().getStreet().equals("Städelstraße"));
     }
@@ -211,11 +197,11 @@ public class ArcadedbConnectionIT {
         var customer = new Customer();
         customer.setAddress(address);
         customer.setName("123 Electronics");
-        customer = connection.insertObject("Customer", customer).block();
+        customer = template.insertDocument("Customer", customer).block();
         customer.setName("456 Electronics");
-        assertThat(connection.updateObject(customer).block())
+        assertThat(template.updateDocument(customer).block())
                 .containsEntry("count", 1);
-        assertThat(connection.findById(customer.getRid(), Customer.class).block())
+        assertThat(template.findById(customer.getRid(), Customer.class).block())
                 .hasFieldOrPropertyWithValue("name", "456 Electronics");
     }
 
@@ -225,24 +211,26 @@ public class ArcadedbConnectionIT {
         var address = Address.builder().town("Frankfurt a.M.").zipcode("60596").street("Städelstraße").build();
         var customer = new Customer();
         customer.setAddress(address);
-        customer.setName("123 BredAnBretzels");
-        customer = connection.insertObject("Customer", customer).block();
+        customer.setName("123 BredAndBretzels");
+        customer = template.mergeDocument(customer).block();
         customer.setPhone("1234567890");
-        assertThat(connection.mergeObject(customer).block())
-                .containsEntry("count", 1);
-        assertThat(connection.findById(customer.getRid(), Customer.class).block())
-                .hasFieldOrPropertyWithValue("name", "123 BredAnBretzels")
+        assertThat(template.mergeDocument(customer).block())
+                .hasFieldOrPropertyWithValue("phone", "1234567890")
+                .hasFieldOrPropertyWithValue("name", "123 BredAndBretzels")
+                .hasFieldOrPropertyWithValue("address", address);
+        assertThat(template.findById(customer.getRid(), Customer.class).block())
+                .hasFieldOrPropertyWithValue("name", "123 BredAndBretzels")
                 .hasFieldOrPropertyWithValue("phone", "1234567890");
     }
 
     @Test
     @Order(12)
     void selectWithCommand() {
-        assertThat(connection.command("select from Customer where name = 'Tester'").blockFirst())
+        assertThat(template.command("select from Customer where name = 'Tester'").blockFirst())
                 .contains(entry("@rid", "#1:0"), entry("@type", "Customer"), entry("@cat", "v"),
                         entry("name", "Tester"));
 
-        assertThatThrownBy(() -> connection.command("select from Person where name = 'Tester'").blockFirst())
+        assertThatThrownBy(() -> template.command("select from Person where name = 'Tester'").blockFirst())
                 .isInstanceOf(SchemaException.class).hasMessageContaining("was not found");
         assertThat(logWatcher.list.stream()
                 .filter(event -> event.getLevel()
@@ -253,7 +241,7 @@ public class ArcadedbConnectionIT {
     @Test
     @Order(13)
     void selectObject() {
-        assertThat(connection.selectObject("select from Customer where name = 'Tester'",
+        assertThat(template.selectDocument("select from Customer where name = 'Tester'",
                 Customer.class).blockFirst())
                 .has(new Condition<Customer>(customer -> customer.getName().equals("Tester"),
                         "has name 'Tester'"))
@@ -267,33 +255,33 @@ public class ArcadedbConnectionIT {
     @Test
     @Order(14)
     void selectWithQuery() {
-        assertThat(connection.query("select from Customer where name = 'Tester'").blockFirst())
+        assertThat(template.query("select from Customer where name = 'Tester'").blockFirst())
                 .contains(entry("@rid", "#1:0"), entry("@type", "Customer"), entry("@cat", "v"),
                         entry("name", "Tester"));
-        assertThatThrownBy(() -> connection.query("insert into Customer set name = 'Secondo'").blockFirst())
+        assertThatThrownBy(() -> template.query("insert into Customer set name = 'Secondo'").blockFirst())
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     @Order(15)
     void delete() {
-        assertThat(connection.command("delete from Customer where name = 'Tester'").blockFirst())
+        assertThat(template.command("delete from Customer where name = 'Tester'").blockFirst())
                 .contains(entry("count", 1));
     }
 
     @Test
     @Order(16)
     void drop() {
-        assertThat(connection.command("drop type Customer unsafe").blockFirst())
+        assertThat(template.command("drop type Customer unsafe").blockFirst())
                 .contains(entry("operation", "drop type"), entry("typeName", "Customer"));
-        assertThatThrownBy(() -> connection.command("drop type Customer").blockFirst())
+        assertThatThrownBy(() -> template.command("drop type Customer").blockFirst())
                 .isInstanceOf(SchemaException.class).hasMessageContaining("was not found");
         assertThat(logWatcher.list.stream()
                 .filter(event -> event.getLevel()
                         .equals(Level.ERROR)
                         && event.getFormattedMessage().contains("was not found")));
 
-        assertThat(connection.command("drop type Client unsafe").blockFirst())
+        assertThat(template.command("drop type Client unsafe").blockFirst())
                 .contains(entry("operation", "drop type"), entry("typeName", "Client"));
     }
 
@@ -309,24 +297,25 @@ public class ArcadedbConnectionIT {
                 "delete from Customer where name = :name",
                 "drop type Customer unsafe"
         };
-        assertThat(connection.script(script, Map.of("name", "Tester")).block())
+        assertThat(template.script(script, Map.of("name", "Tester")).block())
                 .isTrue();
     }
 
     @Test
     @Order(18)
     void sqlscript() throws IOException {
-        assertThat(connection.script(sqlscript).block())
+        assertThat(template.script(sqlscript).block())
                 .isTrue();
     }
 
     @Test
     @Order(19)
     void transactional() throws Exception {
-        try (var taConnection = connection.transactional()) {
+        try (var taConnection = template.transactional()) {
             StepVerifier.create(taConnection.command("create vertex type Customer").concatWith(
                     taConnection.command("insert into Customer set name = 'Tester'")).log())
-                    .expectNextMatches(result -> result.get("operation").equals("create vertex type") && result.get("typeName").equals("Customer"))
+                    .expectNextMatches(result -> result.get("operation").equals("create vertex type")
+                            && result.get("typeName").equals("Customer"))
                     .expectNextMatches(result -> result.get("name").equals("Tester"))
                     .verifyComplete();
         }

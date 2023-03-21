@@ -44,9 +44,9 @@ public class ArcadedbAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public ArcadedbConnection arcadedbConnection(ArcadedbProperties properties, WebClientFactory webClientFactory) {
+    public ArcadedbTemplate arcadedbConnection(ArcadedbProperties properties, WebClientFactory webClientFactory) {
         var connectionProperties = properties.getConnectionPropertiesFor(null);
-        return new ArcadedbConnection(connectionProperties.getDatabase(),
+        return new ArcadedbTemplate(connectionProperties.getDatabase(),
                 webClientFactory.getWebClientSupplierFor(connectionProperties).get());
     }
 }

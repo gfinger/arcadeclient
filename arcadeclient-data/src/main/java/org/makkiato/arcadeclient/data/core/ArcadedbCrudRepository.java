@@ -4,6 +4,6 @@ import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 
 @NoRepositoryBean
-public interface ArcadedbCrudRepository<T, ID> extends ReactiveCrudRepository<T, ID> {
+public interface ArcadedbCrudRepository<T extends DocumentBase, ID> extends ReactiveCrudRepository<T, ID> {
 
 }

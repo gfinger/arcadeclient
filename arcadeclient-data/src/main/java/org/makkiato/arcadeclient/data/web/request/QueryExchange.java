@@ -1,5 +1,6 @@
 package org.makkiato.arcadeclient.data.web.request;
 
+import org.makkiato.arcadeclient.data.core.CommandLanguage;
 import org.makkiato.arcadeclient.data.web.response.CommandResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -11,9 +12,9 @@ public class QueryExchange implements Exchange<CommandResponse> {
     private final String name;
     private final WebClient webClient;
     private final String queryPathSegment;
-    private final String language;
+    private final CommandLanguage language;
 
-    public QueryExchange(String language, String query, String name, WebClient webClient) {
+    public QueryExchange(CommandLanguage language, String query, String name, WebClient webClient) {
         this.name = name;
         this.webClient = webClient;
         this.queryPathSegment = query;
@@ -23,7 +24,7 @@ public class QueryExchange implements Exchange<CommandResponse> {
     @Override
     public Mono<CommandResponse> exchange() {
         return webClient.get()
-                .uri(String.format("%s/%s/%s/%s", BASEURL_QUERY, name, language, queryPathSegment))
+                .uri(String.format("%s/%s/%s/%s", BASEURL_QUERY, name, language.key, queryPathSegment))
                 .accept(MediaType.APPLICATION_JSON)
                 .exchangeToMono(response -> {
                     if (response.statusCode().equals(HttpStatus.OK)) {

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Getter;
 
 @Getter
-public class VertexParent {
+public class DocumentBase {
     @JsonProperty("@rid")
     private String rid;
     @JsonProperty("@type")

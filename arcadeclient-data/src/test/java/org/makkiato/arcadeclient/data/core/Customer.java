@@ -7,8 +7,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@JsonTypeName("Client")
-public class Customer extends VertexParent {
+@JsonTypeName("Customer")
+public class Customer extends DocumentBase {
     private String name;
     private Address address;
     private String phone;

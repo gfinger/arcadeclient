@@ -103,7 +103,7 @@ public @interface EnableArcadeclientRepositories {
     boolean considerNestedRepositories() default false;
 
     /**
-     * Configures the name of the {@link ArcadedbConnection} bean to be used with the repositories detected.
+     * Configures the name of the {@link ArcadedbTemplate} bean to be used with the repositories detected.
      *
      * @return {@literal arcadedbConnection} by default.
      */

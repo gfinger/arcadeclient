@@ -7,9 +7,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import reactor.core.publisher.Mono;
 
-public class TransactionalConnection extends ArcadedbConnection implements AutoCloseable {
+public class TransactionalTemplate extends ArcadedbTemplate implements AutoCloseable {
 
-    protected TransactionalConnection(String databaseName, WebClient webClient) {
+    protected TransactionalTemplate(String databaseName, WebClient webClient) {
         super(databaseName, webClient);
     }
 
