@@ -23,6 +23,7 @@
 		<module>arcadeclient-data</module>
 		<module>arcadeclient-console</module>
 		<module>arcadeclient-autoconfigure</module>
+		<module>arcadeclient-example</module>
 	</modules>
 	<dependencies>
 		<dependency>

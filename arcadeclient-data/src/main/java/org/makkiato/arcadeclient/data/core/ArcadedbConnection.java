@@ -1,5 +1,16 @@
 package org.makkiato.arcadeclient.data.core;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.makkiato.arcadeclient.data.exception.client.ConversionException;
+import org.makkiato.arcadeclient.data.web.request.*;
+import org.makkiato.arcadeclient.data.web.response.EmptyResponse;
+import org.springframework.core.io.Resource;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.time.Duration;
@@ -9,28 +20,11 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
-import org.makkiato.arcadeclient.data.exception.client.ConversionException;
-import org.makkiato.arcadeclient.data.web.request.BeginTAExchange;
-import org.makkiato.arcadeclient.data.web.request.CommandExchange;
-import org.makkiato.arcadeclient.data.web.request.CommitTAExchange;
-import org.makkiato.arcadeclient.data.web.request.QueryExchange;
-import org.makkiato.arcadeclient.data.web.request.RollbackTAExchange;
-import org.makkiato.arcadeclient.data.web.response.EmptyResponse;
-import org.springframework.core.io.Resource;
-import org.springframework.web.reactive.function.client.WebClient;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
 /**
  * Covenience layer on top of http-requests to the ArcadeDB.
  * This object is immutable.
  */
-public class ArcadedbConnection {
+public class ArcadedbConnection implements ArcadedbOperations{
     protected static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(2);
     protected static final String ARCADEDB_SESSION_ID = "arcadedb-session-id";
     protected final String databaseName;
@@ -131,11 +125,11 @@ public class ArcadedbConnection {
                 .map(result -> convertMapToObject((Class<T>) object.getClass(), result));
     }
 
-    public <T extends Vertex> Mono<T> insertObject(T object) {
+    public <T extends VertexParent> Mono<T> insertObject(T object) {
         return insertObject(object, null);
     }
 
-    public <T extends Vertex> Mono<T> insertObject(T object, TransactionHandle transactionHandle) {
+    public <T extends VertexParent> Mono<T> insertObject(T object, TransactionHandle transactionHandle) {
         return insertObject(object.getType(), object, transactionHandle);
     }
 
@@ -148,19 +142,19 @@ public class ArcadedbConnection {
                 .elementAt(0);
     }
 
-    public <T extends Vertex> Mono<Map<String, Object>> updateObject(T object) {
+    public <T extends VertexParent> Mono<Map<String, Object>> updateObject(T object) {
         return updateObject(object, null);
     }
 
-    public <T extends Vertex> Mono<Map<String, Object>> updateObject(T object, TransactionHandle transactionHandle) {
+    public <T extends VertexParent> Mono<Map<String, Object>> updateObject(T object, TransactionHandle transactionHandle) {
         return updateObject(object.getRid(), object, transactionHandle);
     }
 
-    public <T extends Vertex> Mono<Map<String, Object>> mergeObject(T object) {
+    public <T extends VertexParent> Mono<Map<String, Object>> mergeObject(T object) {
         return updateObject(object, null);
     }
 
-    public <T extends Vertex> Mono<Map<String, Object>> mergeObject(T object, TransactionHandle transactionHandle) {
+    public <T extends VertexParent> Mono<Map<String, Object>> mergeObject(T object, TransactionHandle transactionHandle) {
         return updateObject(object.getRid(), object, transactionHandle);
     }
 

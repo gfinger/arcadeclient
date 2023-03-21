@@ -5,5 +5,5 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 
 @NoRepositoryBean
 public interface ArcadedbCrudRepository<T, ID> extends ReactiveCrudRepository<T, ID> {
-    
+
 }

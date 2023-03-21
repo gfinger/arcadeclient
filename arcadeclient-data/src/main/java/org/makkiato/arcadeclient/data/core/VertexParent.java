@@ -2,11 +2,10 @@ package org.makkiato.arcadeclient.data.core;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-
 import lombok.Getter;
 
 @Getter
-public class Vertex {
+public class VertexParent {
     @JsonProperty("@rid")
     private String rid;
     @JsonProperty("@type")
