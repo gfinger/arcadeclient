@@ -4,9 +4,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class PopeService {
-    private final PersonRepository personRepository;
+    private final CustomerRepository personRepository;
 
-    public PopeService(PersonRepository personRepository) {
+    public PopeService(CustomerRepository personRepository) {
         this.personRepository = personRepository;
     }
 }

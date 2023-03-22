@@ -200,7 +200,7 @@ public class ArcadedbTemplateIT {
         customer = template.insertDocument("Customer", customer).block();
         customer.setName("456 Electronics");
         assertThat(template.updateDocument(customer).block())
-                .containsEntry("count", 1);
+                .hasFieldOrPropertyWithValue("name", "456 Electronics");
         assertThat(template.findById(customer.getRid(), Customer.class).block())
                 .hasFieldOrPropertyWithValue("name", "456 Electronics");
     }

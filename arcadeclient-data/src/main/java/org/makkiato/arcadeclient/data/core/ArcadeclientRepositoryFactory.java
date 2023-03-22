@@ -6,10 +6,10 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.ReactiveRepositoryFactorySupport;
 
 public class ArcadeclientRepositoryFactory extends ReactiveRepositoryFactorySupport {
-    private final ArcadedbOperations connection;
+    private final ArcadedbOperations operations;
 
-    public ArcadeclientRepositoryFactory(ArcadedbOperations connection) {
-        this.connection = connection;
+    public ArcadeclientRepositoryFactory(ArcadedbOperations operations) {
+        this.operations = operations;
     }
 
     @Override
@@ -19,7 +19,7 @@ public class ArcadeclientRepositoryFactory extends ReactiveRepositoryFactorySupp
 
     @Override
     protected Object getTargetRepository(RepositoryInformation metadata) {
-        return getTargetRepositoryViaReflection(metadata, connection);
+        return getTargetRepositoryViaReflection(metadata, operations, metadata.getDomainType());
     }
 
     @Override

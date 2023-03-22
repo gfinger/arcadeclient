@@ -31,9 +31,11 @@ public interface ArcadedbOperations {
 
     <T extends DocumentBase> Mono<T> insertDocument(T object);
 
+    Mono<Boolean> exists(String rid);
+
     <T> Mono<Map<String, Object>> updateDocument(String rid, T object);
 
-    <T extends DocumentBase> Mono<Map<String, Object>> updateDocument(T object);
+    <T extends DocumentBase> Mono<T> updateDocument(T object);
 
     <T extends DocumentBase> Mono<T> mergeDocument(T object);
 
@@ -48,6 +50,16 @@ public interface ArcadedbOperations {
 
     <T> Flux<T> selectDocument(CommandLanguage language, String command, Map<String, Object> params,
                                Class<T> objectType, BiFunction<Class<T>, Map<String, Object>, T> mapper);
+
+    Mono<Long> count(String documentName);
+
+    Mono<Void> deleteById(String id, String documentName);
+
+    <T extends DocumentBase> Mono<Void> delete(T document);
+
+    Mono<Void> deleteAllById(Iterable<? extends String> ids, String documentName);
+
+    Mono<Void> deleteAll(String documentName);
 
     Flux<Map<String, Object>> query(String query);
 
