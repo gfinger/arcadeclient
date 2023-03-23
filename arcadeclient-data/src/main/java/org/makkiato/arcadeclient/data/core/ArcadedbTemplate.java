@@ -3,6 +3,7 @@ package org.makkiato.arcadeclient.data.core;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.makkiato.arcadeclient.data.exception.client.ConversionException;
 import org.makkiato.arcadeclient.data.web.request.BeginTAExchange;
 import org.makkiato.arcadeclient.data.web.request.CommandExchange;
@@ -24,6 +25,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+@Slf4j
 /**
  * Convenience layer on top of http-requests to the ArcadeDB.
  * This object is immutable.
@@ -72,7 +74,7 @@ public class ArcadedbTemplate implements ArcadedbOperations {
 
     @Override
     public Mono<Boolean> script(String[] commands, Map<String, Object> params) {
-        var command = Arrays.stream(commands).map(c -> String.format("\"%s\"", c)).collect(Collectors.joining(";"));
+        var command = Arrays.stream(commands).map(c -> String.format("%s", c)).collect(Collectors.joining(";"));
         return new CommandExchange(CommandLanguage.SQLSCRIPT, command, databaseName, params, webClient)
                 .exchange()
                 .hasElement();
@@ -119,7 +121,7 @@ public class ArcadedbTemplate implements ArcadedbOperations {
     public <T extends DocumentBase> Mono<T> updateDocument(T document) {
         Assert.notNull(document, "Document must not be empty");
         Assert.notNull(document.getRid(), "RID of document must not be empty");
-        return command(String.format("update %s content %s", document.getRid(),
+        return command(String.format("update %s content %s return after", document.getRid(),
                 convertObjectToJsonString(document)))
                 .elementAt(0)
                 .map(result -> convertMapToObject((Class<T>) document.getClass(), result));
@@ -245,6 +247,8 @@ public class ArcadedbTemplate implements ArcadedbOperations {
 
     private <T> String convertObjectToJsonString(T object) {
         try {
+            var json = objectMapper.writeValueAsString(object);
+            log.debug("object converted %s", json);
             return objectMapper.writeValueAsString(object);
         } catch (JsonProcessingException ex) {
             throw new ConversionException(String.format("cannot convert object %s", object.toString()), ex);

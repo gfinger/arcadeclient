@@ -1,4 +1,4 @@
-package org.makkiato.arcadeclient;
+package org.makkiato.arcadeclient.example;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

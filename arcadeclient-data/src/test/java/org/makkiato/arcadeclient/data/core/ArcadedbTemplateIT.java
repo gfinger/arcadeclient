@@ -292,13 +292,19 @@ public class ArcadedbTemplateIT {
                 "create vertex type Customer",
                 "create property Customer.name String (mandatory true, notnull true)",
                 "create index on Customer (name) unique",
-                "insert into Customer set name = 'Tester'",
-                "update Customer set age = 25 where name = 'Tester'",
-                "delete from Customer where name = :name",
-                "drop type Customer unsafe"
+                "insert into Customer set name = 'Tester'"
         };
         assertThat(template.script(script, Map.of("name", "Tester")).block())
                 .isTrue();
+        assertThat(template.selectDocument("select from Customer where name = 'Tester'",
+                Customer.class).blockFirst())
+                .has(new Condition<Customer>(customer -> customer.getName().equals("Tester"),
+                        "has name 'Tester'"))
+                .has(new Condition<Customer>(customer -> customer.getRid() != null, "has @rid"))
+                .has(new Condition<Customer>(customer -> customer.getCat().equals("v"), "has @v"))
+                .has(new Condition<Customer>(customer -> customer.getType().equals("Customer"),
+                        "has @type"))
+                .isInstanceOf(Customer.class);
     }
 
     @Test
@@ -306,6 +312,10 @@ public class ArcadedbTemplateIT {
     void sqlscript() throws IOException {
         assertThat(template.script(sqlscript).block())
                 .isTrue();
+        assertThat(template.query("select from Person where name = 'Josh Long'").blockFirst())
+                .contains(entry("@rid", "#1:0"), entry("@type", "Person"), entry("@cat", "v"),
+                        entry("name", "Josh Long"));
+
     }
 
     @Test
