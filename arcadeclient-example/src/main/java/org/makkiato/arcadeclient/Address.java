@@ -1,7 +1,18 @@
 package org.makkiato.arcadeclient;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
 @Builder
-record Address(String street, String zip, String city, String phone) {
+@NoArgsConstructor
+@AllArgsConstructor
+public class Address {
+    private String street;
+    private String zip;
+    private String city;
+    private String phone;
+
 }
