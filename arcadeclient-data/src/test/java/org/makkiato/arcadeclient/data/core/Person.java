@@ -14,6 +14,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonTypeName("Person")
-public class Person extends DocumentBase {
+public class Person extends VertexBase {
     private String name;
 }

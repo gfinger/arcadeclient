@@ -118,7 +118,7 @@ public class ArcadedbTemplate implements ArcadedbOperations {
     }
 
     @Override
-    public <T extends DocumentBase> Mono<T> updateDocument(T document) {
+    public <T extends IdentifiableDocumentBase> Mono<T> updateDocument(T document) {
         Assert.notNull(document, "Document must not be empty");
         Assert.notNull(document.getRid(), "RID of document must not be empty");
         return command(String.format("update %s content %s return after", document.getRid(),
@@ -138,7 +138,7 @@ public class ArcadedbTemplate implements ArcadedbOperations {
      * @return the updated object
      */
     @Override
-    public <T extends DocumentBase> Mono<T> mergeDocument(T document) {
+    public <T extends IdentifiableDocumentBase> Mono<T> mergeDocument(T document) {
         Assert.notNull(document, "Document must not be empty");
         if (document.getRid() != null) {
             return command(String.format("update %s merge %s upsert return after", document.getRid(),
@@ -202,7 +202,7 @@ public class ArcadedbTemplate implements ArcadedbOperations {
     }
 
     @Override
-    public <T extends DocumentBase> Mono<Void> delete(T document) {
+    public <T extends IdentifiableDocumentBase> Mono<Void> delete(T document) {
         Assert.notNull(document, "Document must not be empty");
         Assert.notNull(document.getRid(), "RID of document must not be empty");
         return deleteById(document.getRid(), document.getType());

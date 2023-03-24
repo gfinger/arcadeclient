@@ -14,7 +14,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonTypeName("Book")
-public class Book extends DocumentBase {
+public class Book extends VertexBase {
     private String title;
     private Person[] authors;
 }

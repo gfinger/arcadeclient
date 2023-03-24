@@ -77,6 +77,8 @@ public class ArcadedbTemplateIT {
 
         assertThat(template.command("create vertex type Client").blockFirst()).contains(entry("operation",
                 "create vertex type"), entry("typeName", "Client"));
+        assertThat(template.command("create document type Address").blockFirst()).contains(entry("operation",
+                "create document type"), entry("typeName", "Address"));
     }
 
     @Test
@@ -96,7 +98,7 @@ public class ArcadedbTemplateIT {
     void createProperty() {
         assertThat(template.command("create property Customer.name String (mandatory true, notnull true)")
                 .blockFirst()).contains(entry("operation",
-                        "create property"), entry("typeName", "Customer"));
+                "create property"), entry("typeName", "Customer"));
         assertThatThrownBy(() -> template
                 .command("create property Customer.name String (mandatory true, notnull " +
                         "true)")
@@ -113,8 +115,8 @@ public class ArcadedbTemplateIT {
     @Order(4)
     void createIndex() {
         assertThat(template.command("create index on Customer (name) unique").blockFirst()).contains(entry(
-                "operation",
-                "create index"), entry("name", "Customer[name]"), entry("type", "LSM_TREE"),
+                        "operation",
+                        "create index"), entry("name", "Customer[name]"), entry("type", "LSM_TREE"),
                 entry("totalIndexed", 0));
     }
 
@@ -288,7 +290,7 @@ public class ArcadedbTemplateIT {
     @Test
     @Order(17)
     void script() {
-        var script = new String[] {
+        var script = new String[]{
                 "create vertex type Customer",
                 "create property Customer.name String (mandatory true, notnull true)",
                 "create index on Customer (name) unique",
@@ -313,7 +315,8 @@ public class ArcadedbTemplateIT {
         assertThat(template.script(sqlscript).block())
                 .isTrue();
         assertThat(template.query("select from Person where name = 'Josh Long'").blockFirst())
-                .contains(entry("@rid", "#1:0"), entry("@type", "Person"), entry("@cat", "v"),
+                .containsKey("@rid")
+                .contains(entry("@type", "Person"), entry("@cat", "v"),
                         entry("name", "Josh Long"));
 
     }
@@ -322,8 +325,12 @@ public class ArcadedbTemplateIT {
     @Order(19)
     void transactional() throws Exception {
         try (var taConnection = template.transactional()) {
-            StepVerifier.create(taConnection.command("create vertex type Customer").concatWith(
-                    taConnection.command("insert into Customer set name = 'Tester'")).log())
+            StepVerifier.create(taConnection.command("drop type Customer unsafe")
+                            .concatWith(taConnection.command("create vertex type Customer")
+                                    .concatWith(taConnection.command("insert into Customer set name = 'Tester'"))
+                                    .log()))
+                    .expectNextMatches(result -> result.get("operation").equals("drop type")
+                            && result.get("typeName").equals("Customer"))
                     .expectNextMatches(result -> result.get("operation").equals("create vertex type")
                             && result.get("typeName").equals("Customer"))
                     .expectNextMatches(result -> result.get("name").equals("Tester"))

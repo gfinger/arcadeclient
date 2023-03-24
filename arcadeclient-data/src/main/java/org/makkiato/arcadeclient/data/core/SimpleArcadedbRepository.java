@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class SimpleArcadedbRepository<T extends DocumentBase, ID> implements ArcadedbCrudRepository<T> {
+public class SimpleArcadedbRepository<T extends IdentifiableDocumentBase, ID> implements ArcadedbCrudRepository<T> {
 
     private final ArcadedbOperations operations;
     private final Class<T> domainType;
@@ -117,7 +117,7 @@ public class SimpleArcadedbRepository<T extends DocumentBase, ID> implements Arc
     public Mono<Void> deleteAll(Iterable<? extends T> entities) {
         Assert.notNull(entities, "The given Iterable of entities must not be null");
         var ids = StreamSupport.stream(entities.spliterator(), false)
-                .map(DocumentBase::getRid).collect(Collectors.toUnmodifiableList());
+                .map(IdentifiableDocumentBase::getRid).collect(Collectors.toUnmodifiableList());
         return deleteAllById(ids);
     }
 
