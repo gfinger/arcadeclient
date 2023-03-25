@@ -1,4 +1,4 @@
-package org.makkiato.arcadeclient.data.annotation;
+package org.makkiato.arcadeclient.data.base;
 
 import org.springframework.data.annotation.Persistent;
 

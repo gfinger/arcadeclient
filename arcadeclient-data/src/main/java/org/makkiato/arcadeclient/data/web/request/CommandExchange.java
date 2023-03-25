@@ -1,6 +1,6 @@
 package org.makkiato.arcadeclient.data.web.request;
 
-import org.makkiato.arcadeclient.data.core.CommandLanguage;
+import org.makkiato.arcadeclient.data.operations.CommandLanguage;
 import org.makkiato.arcadeclient.data.web.response.CommandResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.makkiato.arcadeclient.data.core.DocumentBase;
+import org.makkiato.arcadeclient.data.base.DocumentBase;
 
 @Data
 @Builder

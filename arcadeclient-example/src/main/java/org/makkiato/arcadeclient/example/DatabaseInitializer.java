@@ -1,7 +1,7 @@
 package org.makkiato.arcadeclient.example;
 
 import org.makkiato.arcadeclient.data.core.ArcadedbFactory;
-import org.makkiato.arcadeclient.data.core.ArcadedbTemplate;
+import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;

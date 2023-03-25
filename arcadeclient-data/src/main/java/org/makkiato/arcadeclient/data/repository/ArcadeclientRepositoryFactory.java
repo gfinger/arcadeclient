@@ -1,5 +1,7 @@
-package org.makkiato.arcadeclient.data.core;
+package org.makkiato.arcadeclient.data.repository;
 
+import org.makkiato.arcadeclient.data.operations.ArcadedbOperations;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -8,8 +10,11 @@ import org.springframework.data.repository.core.support.ReactiveRepositoryFactor
 public class ArcadeclientRepositoryFactory extends ReactiveRepositoryFactorySupport {
     private final ArcadedbOperations operations;
 
+    private final MappingContext<? extends ArcadeclientPersistentEntity<?>, ArcadeclientPersistentProperty> mappingContext;
+
     public ArcadeclientRepositoryFactory(ArcadedbOperations operations) {
         this.operations = operations;
+        this.mappingContext = operations.getConverter().getMappingContext();
     }
 
     @Override
@@ -24,6 +29,6 @@ public class ArcadeclientRepositoryFactory extends ReactiveRepositoryFactorySupp
 
     @Override
     protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
-        return SimpleArcadedbRepository.class;
+        return SimpleArcadeclientRepository.class;
     }
 }

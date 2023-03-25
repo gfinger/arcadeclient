@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.makkiato.arcadeclient.data.base.VertexBase;
 
 @Getter
 @Setter

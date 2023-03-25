@@ -1,1 +1,1 @@
-org.springframework.data.repository.core.support.RepositoryFactorySupport=org.makkiato.arcadeclient.data.core.ArcadedbRepositoryFactory
+org.springframework.data.repository.core.support.RepositoryFactorySupport=org.makkiato.arcadeclient.data.repository.ArcadeclientRepositoryFactory

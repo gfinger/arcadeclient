@@ -1,4 +1,4 @@
-package org.makkiato.arcadeclient.data.core;
+package org.makkiato.arcadeclient.data.base;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;

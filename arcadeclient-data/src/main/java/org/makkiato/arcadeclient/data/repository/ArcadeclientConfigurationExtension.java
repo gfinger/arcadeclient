@@ -1,6 +1,6 @@
-package org.makkiato.arcadeclient.data.core;
+package org.makkiato.arcadeclient.data.repository;
 
-import org.makkiato.arcadeclient.data.annotation.Document;
+import org.makkiato.arcadeclient.data.base.Document;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource;
@@ -34,7 +34,7 @@ public class ArcadeclientConfigurationExtension extends RepositoryConfigurationE
 
     @Override
     public Collection<Class<?>> getIdentifyingTypes() {
-        return Collections.singleton(ArcadedbCrudRepository.class);
+        return Collections.singleton(ArcadeclientCrudRepository.class);
     }
 
     @Override

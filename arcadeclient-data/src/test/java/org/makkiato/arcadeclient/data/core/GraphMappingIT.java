@@ -5,6 +5,8 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.*;
+import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
+import org.makkiato.arcadeclient.data.operations.CommandLanguage;
 import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilterImpl;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,7 +87,7 @@ public class GraphMappingIT {
     @Test
     @Order(2)
     void selectObject() {
-        assertThat(connection.selectDocument(CommandLanguage.GRAPHQL, "{bookByTitle(title:\"Der Zauberberg\")}",
+        assertThat(connection.select(CommandLanguage.GRAPHQL, "{bookByTitle(title:\"Der Zauberberg\")}",
                 Book.class).blockFirst())
                 .has(new Condition<Book>(book -> book.getTitle().equals("Der Zauberberg"),
                         "has title 'Der Zauberberg'"))
@@ -98,7 +100,7 @@ public class GraphMappingIT {
                         "has @type"))
                 .isInstanceOf(Book.class);
 
-        assertThat(connection.selectDocument(CommandLanguage.GRAPHQL, "{bookByAuthor(name:\"Thomas Mann\")}",
+        assertThat(connection.select(CommandLanguage.GRAPHQL, "{bookByAuthor(name:\"Thomas Mann\")}",
                 Book.class).blockFirst())
                 .has(new Condition<Book>(book -> book.getTitle().equals("Der Zauberberg"),
                         "has title 'Der Zauberberg'"))

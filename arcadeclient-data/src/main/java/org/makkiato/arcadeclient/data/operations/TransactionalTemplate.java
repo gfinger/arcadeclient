@@ -1,10 +1,9 @@
-package org.makkiato.arcadeclient.data.core;
+package org.makkiato.arcadeclient.data.operations;
 
 import org.makkiato.arcadeclient.data.web.request.CommitTAExchange;
 import org.makkiato.arcadeclient.data.web.request.RollbackTAExchange;
 import org.makkiato.arcadeclient.data.web.response.EmptyResponse;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import reactor.core.publisher.Mono;
 
 public class TransactionalTemplate extends ArcadedbTemplate implements AutoCloseable {

@@ -1,4 +1,4 @@
-package org.makkiato.arcadeclient.data.core;
+package org.makkiato.arcadeclient.data.operations;
 
 public enum CommandLanguage {
     SQL("sql"),

@@ -1,5 +1,6 @@
 package org.makkiato.arcadeclient.data.core;
 
+import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
 import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilter;
 import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilterImpl;
 import org.makkiato.arcadeclient.data.web.client.HALeaderWebClientSupplierStrategy;

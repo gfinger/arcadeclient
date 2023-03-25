@@ -1,10 +1,13 @@
-package org.makkiato.arcadeclient.data.core;
+package org.makkiato.arcadeclient.data.operations;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.makkiato.arcadeclient.data.base.IdentifiableDocumentBase;
 import org.makkiato.arcadeclient.data.exception.client.ConversionException;
+import org.makkiato.arcadeclient.data.repository.ArcadeclientEntityConverter;
+import org.makkiato.arcadeclient.data.repository.MappingArcadeclientConverter;
 import org.makkiato.arcadeclient.data.web.request.BeginTAExchange;
 import org.makkiato.arcadeclient.data.web.request.CommandExchange;
 import org.makkiato.arcadeclient.data.web.request.QueryExchange;
@@ -99,21 +102,21 @@ public class ArcadedbTemplate implements ArcadedbOperations {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public <T> Mono<T> insertDocument(String documentName, T object) {
+    public Mono<Map<String, Object>> insert(String documentName, Object object) {
         return command(String.format("insert into %s content %s", documentName, convertObjectToJsonString(object)))
+                .elementAt(0);
+    }
+
+    @Override
+    public <T extends IdentifiableDocumentBase> Mono<T> insertDocument(T document) {
+        return command(String.format("insert into %s content %s", document.getType(), convertObjectToJsonString(document)))
                 .elementAt(0)
-                .map(result -> convertMapToObject((Class<T>) object.getClass(), result));
+                .map(item -> convertMapToObject((Class<T>)document.getClass(), item));
     }
 
     @Override
-    public <T extends DocumentBase> Mono<T> insertDocument(T document) {
-        return insertDocument(document.getType(), document);
-    }
-
-    @Override
-    public <T> Mono<Map<String, Object>> updateDocument(String rid, T object) {
-        return command(String.format("update %s content %s", rid, convertObjectToJsonString(object)))
+    public <T> Mono<Map<String, Object>> update(String rid, T object) {
+        return command(String.format("update %s content %s return after", rid, convertObjectToJsonString(object)))
                 .elementAt(0);
     }
 
@@ -128,7 +131,7 @@ public class ArcadedbTemplate implements ArcadedbOperations {
     }
 
     /**
-     * Merges an instance of {@link org.makkiato.arcadeclient.data.annotation.Document} into the corresponding Document
+     * Merges an instance of {@link org.makkiato.arcadeclient.data.base.Document} into the corresponding Document
      * in the database if it exists, or creates a new one, if not.
      * Whether a document is merged or inserted depends on whether there is a RID in the document or not.
      * The returned value is the document after being updated.
@@ -151,29 +154,29 @@ public class ArcadedbTemplate implements ArcadedbOperations {
     }
 
     @Override
-    public <T> Flux<T> selectDocument(String command, Class<T> objectType) {
-        return selectDocument(CommandLanguage.SQL, command, null, objectType, this::convertMapToObject);
+    public <T> Flux<T> select(String command, Class<T> objectType) {
+        return select(CommandLanguage.SQL, command, null, objectType, this::convertMapToObject);
     }
 
     @Override
-    public <T> Flux<T> selectDocument(String command, Map<String, Object> params, Class<T> objectType) {
-        return selectDocument(CommandLanguage.SQL, command, params, objectType, this::convertMapToObject);
+    public <T> Flux<T> select(String command, Map<String, Object> params, Class<T> objectType) {
+        return select(CommandLanguage.SQL, command, params, objectType, this::convertMapToObject);
     }
 
     @Override
-    public <T> Flux<T> selectDocument(CommandLanguage language, String command, Class<T> objectType) {
-        return selectDocument(language, command, null, objectType, this::convertMapToObject);
+    public <T> Flux<T> select(CommandLanguage language, String command, Class<T> objectType) {
+        return select(language, command, null, objectType, this::convertMapToObject);
     }
 
     @Override
-    public <T> Flux<T> selectDocument(CommandLanguage language, String command, Map<String, Object> params,
-                                      Class<T> objectType) {
-        return selectDocument(language, command, params, objectType, this::convertMapToObject);
+    public <T> Flux<T> select(CommandLanguage language, String command, Map<String, Object> params,
+                              Class<T> objectType) {
+        return select(language, command, params, objectType, this::convertMapToObject);
     }
 
     @Override
-    public <T> Flux<T> selectDocument(CommandLanguage language, String command, Map<String, Object> params,
-                                      Class<T> objectType, BiFunction<Class<T>, Map<String, Object>, T> mapper) {
+    public <T> Flux<T> select(CommandLanguage language, String command, Map<String, Object> params,
+                              Class<T> objectType, BiFunction<Class<T>, Map<String, Object>, T> mapper) {
         return new CommandExchange(language, command, databaseName, params, webClient)
                 .exchange()
                 .map(CommandResponse::result)
@@ -202,7 +205,7 @@ public class ArcadedbTemplate implements ArcadedbOperations {
     }
 
     @Override
-    public <T extends IdentifiableDocumentBase> Mono<Void> delete(T document) {
+    public <T extends IdentifiableDocumentBase> Mono<Void> deleteDocument(T document) {
         Assert.notNull(document, "Document must not be empty");
         Assert.notNull(document.getRid(), "RID of document must not be empty");
         return deleteById(document.getRid(), document.getType());
@@ -233,7 +236,7 @@ public class ArcadedbTemplate implements ArcadedbOperations {
 
     @Override
     public <T> Mono<T> findById(String rid, Class<T> objectType) {
-        return selectDocument(String.format("select from [%s]", rid), objectType).elementAt(0);
+        return select(String.format("select from [%s]", rid), objectType).elementAt(0);
     }
 
     @Override
@@ -265,5 +268,10 @@ public class ArcadedbTemplate implements ArcadedbOperations {
                 .map(id -> new TransactionalTemplate(databaseName,
                         webClient.mutate().defaultHeader(ARCADEDB_SESSION_ID, id).build()))
                 .block(CONNECTION_TIMEOUT);
+    }
+
+    @Override
+    public ArcadeclientEntityConverter getConverter() {
+        return new MappingArcadeclientConverter();
     }
 }

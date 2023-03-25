@@ -1,6 +1,8 @@
-package org.makkiato.arcadeclient.data.core;
+package org.makkiato.arcadeclient.data.repository;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.makkiato.arcadeclient.data.base.IdentifiableDocumentBase;
+import org.makkiato.arcadeclient.data.operations.ArcadedbOperations;
 import org.reactivestreams.Publisher;
 import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
@@ -9,13 +11,13 @@ import reactor.core.publisher.Mono;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class SimpleArcadedbRepository<T extends IdentifiableDocumentBase, ID> implements ArcadedbCrudRepository<T> {
+public class SimpleArcadeclientRepository<T extends IdentifiableDocumentBase, ID> implements ArcadeclientCrudRepository<T> {
 
     private final ArcadedbOperations operations;
     private final Class<T> domainType;
     private final String documentName;
 
-    public SimpleArcadedbRepository(ArcadedbOperations operations, Class<T> domainType) {
+    public SimpleArcadeclientRepository(ArcadedbOperations operations, Class<T> domainType) {
         Assert.notNull(operations, "ArcadedbOperations must not be null");
         Assert.notNull(domainType, "Domain Type must not be null");
         this.operations = operations;
@@ -69,7 +71,7 @@ public class SimpleArcadedbRepository<T extends IdentifiableDocumentBase, ID> im
     @Override
     public Flux<T> findAll() {
         var command = String.format("select from %s", documentName);
-        return operations.selectDocument(command, domainType);
+        return operations.select(command, domainType);
     }
 
     @Override
@@ -104,7 +106,7 @@ public class SimpleArcadedbRepository<T extends IdentifiableDocumentBase, ID> im
     @Override
     public Mono<Void> delete(T entity) {
         Assert.notNull(entity, "The given entity must not be null");
-        return operations.delete(entity);
+        return operations.deleteDocument(entity);
     }
 
     @Override

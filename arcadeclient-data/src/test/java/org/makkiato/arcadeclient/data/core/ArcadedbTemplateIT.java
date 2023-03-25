@@ -8,6 +8,7 @@ import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.*;
 import org.makkiato.arcadeclient.data.exception.server.IllegalArgumentException;
 import org.makkiato.arcadeclient.data.exception.server.*;
+import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
 import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilterImpl;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -174,12 +175,12 @@ public class ArcadedbTemplateIT {
         var customer1 = new Customer();
         customer1.setAddress(address);
         customer1.setName("ABC Electronics");
-        assertThat(template.insertDocument("Customer", customer1).block())
+        assertThat(template.insert("Customer", customer1).block())
                 .hasFieldOrPropertyWithValue("name", "ABC Electronics")
-                .matches(cu -> cu.getCat() != null && cu.getRid() != null
-                        && cu.getType().equals("Customer"), "no valid vertex")
-                .matches(cu -> cu.getAddress() != null
-                        && cu.getAddress().getStreet().equals("Städelstraße"));
+                .matches(cu -> cu.get("@cat") != null && cu.get("@rid") != null
+                        && cu.get("@type").equals("Customer"), "no valid vertex")
+                .matches(cu -> cu.get("address") != null
+                        && ((Map)cu.get("address")).get("street").equals("Städelstraße"));
 
         var customer2 = new Customer();
         customer2.setAddress(address);
@@ -199,7 +200,7 @@ public class ArcadedbTemplateIT {
         var customer = new Customer();
         customer.setAddress(address);
         customer.setName("123 Electronics");
-        customer = template.insertDocument("Customer", customer).block();
+        customer = template.insertDocument(customer).block();
         customer.setName("456 Electronics");
         assertThat(template.updateDocument(customer).block())
                 .hasFieldOrPropertyWithValue("name", "456 Electronics");
@@ -243,7 +244,7 @@ public class ArcadedbTemplateIT {
     @Test
     @Order(13)
     void selectObject() {
-        assertThat(template.selectDocument("select from Customer where name = 'Tester'",
+        assertThat(template.select("select from Customer where name = 'Tester'",
                 Customer.class).blockFirst())
                 .has(new Condition<Customer>(customer -> customer.getName().equals("Tester"),
                         "has name 'Tester'"))
@@ -298,7 +299,7 @@ public class ArcadedbTemplateIT {
         };
         assertThat(template.script(script, Map.of("name", "Tester")).block())
                 .isTrue();
-        assertThat(template.selectDocument("select from Customer where name = 'Tester'",
+        assertThat(template.select("select from Customer where name = 'Tester'",
                 Customer.class).blockFirst())
                 .has(new Condition<Customer>(customer -> customer.getName().equals("Tester"),
                         "has name 'Tester'"))

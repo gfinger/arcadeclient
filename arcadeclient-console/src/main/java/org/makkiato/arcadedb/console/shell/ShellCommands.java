@@ -1,6 +1,6 @@
 package org.makkiato.arcadedb.console.shell;
 
-import org.makkiato.arcadeclient.data.core.ArcadedbTemplate;
+import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
 import org.makkiato.arcadeclient.data.core.ArcadedbFactory;
 import org.makkiato.arcadeclient.data.core.ArcadedbProperties;
 import org.makkiato.arcadeclient.data.core.WebClientFactory;
