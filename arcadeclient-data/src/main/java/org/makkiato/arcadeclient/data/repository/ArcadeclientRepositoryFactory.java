@@ -1,5 +1,7 @@
 package org.makkiato.arcadeclient.data.repository;
 
+import org.makkiato.arcadeclient.data.mapping.ArcadeclientPersistentEntity;
+import org.makkiato.arcadeclient.data.mapping.ArcadeclientPersistentProperty;
 import org.makkiato.arcadeclient.data.operations.ArcadedbOperations;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.core.EntityInformation;

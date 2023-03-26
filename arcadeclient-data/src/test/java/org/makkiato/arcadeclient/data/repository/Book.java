@@ -1,4 +1,4 @@
-package org.makkiato.arcadeclient.data.core;
+package org.makkiato.arcadeclient.data.repository;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
@@ -14,7 +14,8 @@ import org.makkiato.arcadeclient.data.base.VertexBase;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonTypeName("Person")
-public class Person extends VertexBase {
-    private String name;
+@JsonTypeName("Book")
+public class Book extends VertexBase {
+    private String title;
+    private Person[] authors;
 }

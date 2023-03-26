@@ -1,4 +1,4 @@
-package org.makkiato.arcadeclient.data.core;
+package org.makkiato.arcadeclient.data.repository;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -6,6 +6,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.*;
+import org.makkiato.arcadeclient.data.core.ArcadedbFactory;
 import org.makkiato.arcadeclient.data.exception.server.IllegalArgumentException;
 import org.makkiato.arcadeclient.data.exception.server.*;
 import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;

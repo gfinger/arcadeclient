@@ -1,10 +1,12 @@
-package org.makkiato.arcadeclient.data.core;
+package org.makkiato.arcadeclient.data.repository;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.*;
+import org.makkiato.arcadeclient.data.core.ArcadedbFactory;
+import org.makkiato.arcadeclient.data.core.TestConfiguration;
 import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
 import org.makkiato.arcadeclient.data.operations.CommandLanguage;
 import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilterImpl;

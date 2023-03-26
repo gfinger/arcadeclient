@@ -1,4 +1,4 @@
-package org.makkiato.arcadeclient.data.core;
+package org.makkiato.arcadeclient.data.mapping;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,5 +1,6 @@
-package org.makkiato.arcadeclient.data.repository;
+package org.makkiato.arcadeclient.data.mapping;
 
+import org.makkiato.arcadeclient.data.mapping.ArcadeclientPersistentProperty;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;

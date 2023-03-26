@@ -1,4 +1,4 @@
-package org.makkiato.arcadeclient.data.repository;
+package org.makkiato.arcadeclient.data.mapping;
 
 import org.springframework.data.mapping.model.MutablePersistentEntity;
 

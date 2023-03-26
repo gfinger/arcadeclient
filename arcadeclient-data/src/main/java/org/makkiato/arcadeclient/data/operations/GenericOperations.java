@@ -1,6 +1,6 @@
 package org.makkiato.arcadeclient.data.operations;
 
-import org.makkiato.arcadeclient.data.repository.ArcadeclientEntityConverter;
+import org.makkiato.arcadeclient.data.mapping.ArcadeclientEntityConverter;
 import org.springframework.core.io.Resource;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
