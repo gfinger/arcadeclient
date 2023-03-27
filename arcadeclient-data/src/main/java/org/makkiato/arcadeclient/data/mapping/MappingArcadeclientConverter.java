@@ -5,6 +5,11 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.data.mapping.context.MappingContext;
 
 public class MappingArcadeclientConverter implements ArcadeclientEntityConverter {
+    private final ArcadeclientMappingContext arcadeclientMappingContext;
+
+    public MappingArcadeclientConverter(ArcadeclientMappingContext arcadeclientMappingContext) {
+        this.arcadeclientMappingContext = arcadeclientMappingContext;
+    }
     /**
      * Returns the underlying {@link MappingContext} used by the converter.
      *
@@ -12,7 +17,7 @@ public class MappingArcadeclientConverter implements ArcadeclientEntityConverter
      */
     @Override
     public MappingContext<? extends ArcadeclientPersistentEntity<?>, ArcadeclientPersistentProperty> getMappingContext() {
-        return null;
+        return arcadeclientMappingContext;
     }
 
     /**

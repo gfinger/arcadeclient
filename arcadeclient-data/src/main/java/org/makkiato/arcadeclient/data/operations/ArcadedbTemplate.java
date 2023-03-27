@@ -39,12 +39,18 @@ public class ArcadedbTemplate implements ArcadedbOperations {
     protected final String databaseName;
     protected final WebClient webClient;
     private final ObjectMapper objectMapper;
+    private final ArcadeclientEntityConverter entityConverter;
 
-    public ArcadedbTemplate(WebClient webClient, String databaseName) {
+    public ArcadedbTemplate(WebClient webClient, String databaseName, ArcadeclientEntityConverter entityConverter) {
         this.databaseName = databaseName;
         this.webClient = webClient;
         this.objectMapper = new ObjectMapper();
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        this.entityConverter = entityConverter;
+    }
+
+    private ArcadeclientEntityConverter getDefaultEntityConverter() {
+        return new MappingArcadeclientConverter(null);
     }
 
     @Override
@@ -266,12 +272,12 @@ public class ArcadedbTemplate implements ArcadedbOperations {
                 .filter(item -> !item.isEmpty())
                 .map(item -> item.get(0))
                 .map(id -> new TransactionalArcadeddbTemplate(databaseName,
-                        webClient.mutate().defaultHeader(ARCADEDB_SESSION_ID, id).build()))
+                        webClient.mutate().defaultHeader(ARCADEDB_SESSION_ID, id).build(), entityConverter))
                 .block(CONNECTION_TIMEOUT);
     }
 
     @Override
     public ArcadeclientEntityConverter getConverter() {
-        return new MappingArcadeclientConverter();
+        return entityConverter;
     }
 }

@@ -1,9 +1,7 @@
 package org.makkiato.arcadeclient.autoconfigure.data;
 
-import org.makkiato.arcadeclient.data.core.ArcadedbFactory;
 import org.makkiato.arcadeclient.data.core.ArcadedbProperties;
 import org.makkiato.arcadeclient.data.core.WebClientFactory;
-import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
 import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilter;
 import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilterImpl;
 import org.makkiato.arcadeclient.data.web.client.HALeaderWebClientSupplierStrategy;
@@ -35,19 +33,5 @@ public class ArcadedbAutoConfiguration {
     public WebClientFactory webClientFactory(ArcadedbErrorResponseFilter arcadedbErrorResponseFilter,
             WebClientSupplierStrategy webClientSupplierStrategy) {
         return new WebClientFactory(arcadedbErrorResponseFilter, webClientSupplierStrategy);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public ArcadedbFactory arcadedbFactory(ArcadedbProperties properties, WebClientFactory webClientFactory) {
-        return new ArcadedbFactory(webClientFactory, properties.getConnectionPropertiesFor(null));
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public ArcadedbTemplate arcadedbTemplate(ArcadedbProperties properties, WebClientFactory webClientFactory) {
-        var connectionProperties = properties.getConnectionPropertiesFor(null);
-        return new ArcadedbTemplate(webClientFactory.getWebClientSupplierFor(connectionProperties).get(), connectionProperties.getDatabase()
-        );
     }
 }

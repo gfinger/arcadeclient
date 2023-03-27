@@ -1,5 +1,6 @@
 package org.makkiato.arcadeclient.data.operations;
 
+import org.makkiato.arcadeclient.data.mapping.ArcadeclientEntityConverter;
 import org.makkiato.arcadeclient.data.web.request.CommitTAExchange;
 import org.makkiato.arcadeclient.data.web.request.RollbackTAExchange;
 import org.makkiato.arcadeclient.data.web.response.EmptyResponse;
@@ -8,8 +9,8 @@ import reactor.core.publisher.Mono;
 
 public class TransactionalArcadeddbTemplate extends ArcadedbTemplate implements AutoCloseable {
 
-    protected TransactionalArcadeddbTemplate(String databaseName, WebClient webClient) {
-        super(webClient, databaseName);
+    protected TransactionalArcadeddbTemplate(String databaseName, WebClient webClient, ArcadeclientEntityConverter entityConverter) {
+        super(webClient, databaseName, entityConverter);
     }
 
     @Override

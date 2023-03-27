@@ -1,7 +1,12 @@
 package org.makkiato.arcadeclient.data.config;
 
 import org.makkiato.arcadeclient.data.base.IdentifiableDocumentBase;
+import org.makkiato.arcadeclient.data.core.ArcadedbFactory;
+import org.makkiato.arcadeclient.data.core.ArcadedbProperties;
+import org.makkiato.arcadeclient.data.core.WebClientFactory;
 import org.makkiato.arcadeclient.data.mapping.ArcadeclientMappingContext;
+import org.makkiato.arcadeclient.data.mapping.MappingArcadeclientConverter;
+import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
@@ -65,5 +70,18 @@ public abstract class ArcadeclientConfigurationSupport {
     @Bean
     public ArcadeclientManagedTypes arcadeclientManagedTypes() throws ClassNotFoundException {
         return ArcadeclientManagedTypes.fromIterable(getInitialEntitySet());
+    }
+    @Bean
+    public ArcadedbFactory arcadedbFactory(ArcadedbProperties properties, WebClientFactory webClientFactory) {
+        return new ArcadedbFactory(webClientFactory, properties.getConnectionPropertiesFor(null));
+    }
+
+    @Bean
+    public ArcadedbTemplate arcadedbTemplate(ArcadedbProperties properties, WebClientFactory webClientFactory,
+                                             ArcadeclientMappingContext arcadeclientMappingContext) {
+        var connectionProperties = properties.getConnectionPropertiesFor(null);
+        return new ArcadedbTemplate(webClientFactory.getWebClientSupplierFor(connectionProperties).get(),
+                connectionProperties.getDatabase(), new MappingArcadeclientConverter(arcadeclientMappingContext) {
+        });
     }
 }

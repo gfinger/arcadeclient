@@ -1,6 +1,6 @@
 package org.makkiato.arcadeclient.data.core;
 
-import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
+import org.makkiato.arcadeclient.data.config.ArcadeclientConfigurationSupport;
 import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilter;
 import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilterImpl;
 import org.makkiato.arcadeclient.data.web.client.HALeaderWebClientSupplierStrategy;
@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ConfigurationPropertiesScan(basePackageClasses = ArcadedbProperties.class)
-public class TestConfiguration {
+public class TestConfiguration extends ArcadeclientConfigurationSupport {
     @Bean
     public ArcadedbErrorResponseFilter arcadedbErrorResponseFilter() {
         return new ArcadedbErrorResponseFilterImpl();
@@ -26,17 +26,5 @@ public class TestConfiguration {
     public WebClientFactory webClientFactory(ArcadedbErrorResponseFilter arcadedbErrorResponseFilter,
             WebClientSupplierStrategy webClientSupplierStrategy) {
         return new WebClientFactory(arcadedbErrorResponseFilter, webClientSupplierStrategy);
-    }
-
-    @Bean
-    public ArcadedbFactory arcadedbFactory(ArcadedbProperties properties, WebClientFactory webClientFactory) {
-        return new ArcadedbFactory(webClientFactory, properties.getConnectionPropertiesFor(null));
-    }
-
-    @Bean
-    public ArcadedbTemplate arcadedbTemplate(ArcadedbProperties properties, WebClientFactory webClientFactory) {
-        var connectionProperties = properties.getConnectionPropertiesFor(null);
-        return new ArcadedbTemplate(webClientFactory.getWebClientSupplierFor(connectionProperties).get(), connectionProperties.getDatabase()
-        );
     }
 }
