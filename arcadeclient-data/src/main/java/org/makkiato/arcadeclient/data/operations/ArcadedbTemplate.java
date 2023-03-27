@@ -40,7 +40,7 @@ public class ArcadedbTemplate implements ArcadedbOperations {
     protected final WebClient webClient;
     private final ObjectMapper objectMapper;
 
-    public ArcadedbTemplate(String databaseName, WebClient webClient) {
+    public ArcadedbTemplate(WebClient webClient, String databaseName) {
         this.databaseName = databaseName;
         this.webClient = webClient;
         this.objectMapper = new ObjectMapper();
@@ -258,14 +258,14 @@ public class ArcadedbTemplate implements ArcadedbOperations {
         }
     }
 
-    public TransactionalTemplate transactional() {
+    public TransactionalArcadeddbTemplate transactional() {
         return new BeginTAExchange(databaseName, webClient).exchange()
                 .map(EmptyResponse::headers)
                 .filter(header -> header.containsKey(ARCADEDB_SESSION_ID))
                 .map(header -> header.get(ARCADEDB_SESSION_ID))
                 .filter(item -> !item.isEmpty())
                 .map(item -> item.get(0))
-                .map(id -> new TransactionalTemplate(databaseName,
+                .map(id -> new TransactionalArcadeddbTemplate(databaseName,
                         webClient.mutate().defaultHeader(ARCADEDB_SESSION_ID, id).build()))
                 .block(CONNECTION_TIMEOUT);
     }

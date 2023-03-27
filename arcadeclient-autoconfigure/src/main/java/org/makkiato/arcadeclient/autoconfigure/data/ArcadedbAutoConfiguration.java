@@ -1,8 +1,9 @@
 package org.makkiato.arcadeclient.autoconfigure.data;
 
-import org.makkiato.arcadeclient.data.core.*;
+import org.makkiato.arcadeclient.data.core.ArcadedbFactory;
+import org.makkiato.arcadeclient.data.core.ArcadedbProperties;
+import org.makkiato.arcadeclient.data.core.WebClientFactory;
 import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
-import org.makkiato.arcadeclient.data.repository.ArcadeclientRepositoriesRegistrar;
 import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilter;
 import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilterImpl;
 import org.makkiato.arcadeclient.data.web.client.HALeaderWebClientSupplierStrategy;
@@ -12,12 +13,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
 
 @AutoConfiguration
 @EnableConfigurationProperties(ArcadedbProperties.class)
 @ConditionalOnClass(ArcadedbProperties.class)
-@Import(ArcadeclientRepositoriesRegistrar.class)
 public class ArcadedbAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
@@ -46,9 +45,9 @@ public class ArcadedbAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public ArcadedbTemplate arcadedbConnection(ArcadedbProperties properties, WebClientFactory webClientFactory) {
+    public ArcadedbTemplate arcadedbTemplate(ArcadedbProperties properties, WebClientFactory webClientFactory) {
         var connectionProperties = properties.getConnectionPropertiesFor(null);
-        return new ArcadedbTemplate(connectionProperties.getDatabase(),
-                webClientFactory.getWebClientSupplierFor(connectionProperties).get());
+        return new ArcadedbTemplate(webClientFactory.getWebClientSupplierFor(connectionProperties).get(), connectionProperties.getDatabase()
+        );
     }
 }

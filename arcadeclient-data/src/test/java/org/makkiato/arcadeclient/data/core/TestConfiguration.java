@@ -34,9 +34,9 @@ public class TestConfiguration {
     }
 
     @Bean
-    public ArcadedbTemplate arcadedbConnection(ArcadedbProperties properties, WebClientFactory webClientFactory) {
+    public ArcadedbTemplate arcadedbTemplate(ArcadedbProperties properties, WebClientFactory webClientFactory) {
         var connectionProperties = properties.getConnectionPropertiesFor(null);
-        return new ArcadedbTemplate(connectionProperties.getDatabase(),
-                webClientFactory.getWebClientSupplierFor(connectionProperties).get());
+        return new ArcadedbTemplate(webClientFactory.getWebClientSupplierFor(connectionProperties).get(), connectionProperties.getDatabase()
+        );
     }
 }

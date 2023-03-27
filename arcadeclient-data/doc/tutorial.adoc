@@ -16,7 +16,7 @@ classDiagram
     }
     class ArcadedbFactory {
     }
-    class ArcadedbConnection {
+    class ArcadedbTemplate {
     }
 ----
 

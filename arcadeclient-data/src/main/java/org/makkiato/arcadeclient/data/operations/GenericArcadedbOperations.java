@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-public interface GenericOperations {
+public interface GenericArcadedbOperations {
     Mono<Boolean> script(Resource resource) throws IOException;
 
     Mono<Boolean> script(Resource resource, Map<String, Object> params)
@@ -42,4 +42,18 @@ public interface GenericOperations {
     Flux<Map<String, Object>> query(String query);
 
     ArcadeclientEntityConverter getConverter();
+
+    enum CommandLanguage {
+        SQL("sql"),
+        SQLSCRIPT("sqlscript"),
+        GRAPHQL("graphql"),
+        CYPHER("cypher"),
+        GREMLIN("gremlin"),
+        MONGO("mongo");
+
+        public final String key;
+        CommandLanguage(String key) {
+            this.key = key;
+        }
+    }
 }

@@ -5,7 +5,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
-public interface ArcadedbOperations extends GenericOperations {
+public interface ArcadedbOperations extends GenericArcadedbOperations {
 
     Mono<Map<String, Object>> insert(String documentName, Object object);
 

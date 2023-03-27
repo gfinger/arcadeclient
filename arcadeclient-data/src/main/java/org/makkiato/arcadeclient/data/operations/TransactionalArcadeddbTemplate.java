@@ -6,10 +6,10 @@ import org.makkiato.arcadeclient.data.web.response.EmptyResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-public class TransactionalTemplate extends ArcadedbTemplate implements AutoCloseable {
+public class TransactionalArcadeddbTemplate extends ArcadedbTemplate implements AutoCloseable {
 
-    protected TransactionalTemplate(String databaseName, WebClient webClient) {
-        super(databaseName, webClient);
+    protected TransactionalArcadeddbTemplate(String databaseName, WebClient webClient) {
+        super(webClient, databaseName);
     }
 
     @Override

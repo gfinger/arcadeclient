@@ -106,7 +106,7 @@ public @interface EnableArcadeclientRepositories {
     /**
      * Configures the name of the {@link ArcadedbTemplate} bean to be used with the repositories detected.
      *
-     * @return {@literal arcadedbConnection} by default.
+     * @return {@literal arcadedbTemplate} by default.
      */
-    String arcadedbTemplateRef() default "arcadedbConnection";
+    String arcadedbTemplateRef() default "arcadedbTemplate";
 }
