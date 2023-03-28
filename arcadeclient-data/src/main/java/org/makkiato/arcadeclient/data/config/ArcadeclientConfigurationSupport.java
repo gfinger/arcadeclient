@@ -1,6 +1,6 @@
 package org.makkiato.arcadeclient.data.config;
 
-import org.makkiato.arcadeclient.data.base.IdentifiableDocumentBase;
+import org.makkiato.arcadeclient.data.base.Document;
 import org.makkiato.arcadeclient.data.core.ArcadedbFactory;
 import org.makkiato.arcadeclient.data.core.ArcadedbProperties;
 import org.makkiato.arcadeclient.data.core.WebClientFactory;
@@ -10,6 +10,7 @@ import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
@@ -40,16 +41,7 @@ public abstract class ArcadeclientConfigurationSupport {
         var initialEntitySet = new HashSet<Class<?>>();
         ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(
                 false);
-        componentProvider.addIncludeFilter(((metadataReader, metadataReaderFactory) ->
-        {
-            try {
-                return IdentifiableDocumentBase.class.isAssignableFrom(
-                        ClassUtils.forName(metadataReader.getClassMetadata().getClassName(),
-                                ArcadeclientConfigurationSupport.class.getClassLoader()));
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-        }));
+        componentProvider.addIncludeFilter(new AnnotationTypeFilter(Document.class));
 
         for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
 

@@ -1,11 +1,7 @@
 package org.makkiato.arcadeclient.data.operations;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.makkiato.arcadeclient.data.base.IdentifiableDocumentBase;
-import org.makkiato.arcadeclient.data.exception.client.ConversionException;
 import org.makkiato.arcadeclient.data.mapping.ArcadeclientEntityConverter;
 import org.makkiato.arcadeclient.data.mapping.MappingArcadeclientConverter;
 import org.makkiato.arcadeclient.data.web.request.BeginTAExchange;
@@ -38,14 +34,11 @@ public class ArcadedbTemplate implements ArcadedbOperations {
     protected static final String ARCADEDB_SESSION_ID = "arcadedb-session-id";
     protected final String databaseName;
     protected final WebClient webClient;
-    private final ObjectMapper objectMapper;
     private final ArcadeclientEntityConverter entityConverter;
 
     public ArcadedbTemplate(WebClient webClient, String databaseName, ArcadeclientEntityConverter entityConverter) {
         this.databaseName = databaseName;
         this.webClient = webClient;
-        this.objectMapper = new ObjectMapper();
-        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.entityConverter = entityConverter;
     }
 
@@ -115,7 +108,8 @@ public class ArcadedbTemplate implements ArcadedbOperations {
 
     @Override
     public <T extends IdentifiableDocumentBase> Mono<T> insertDocument(T document) {
-        return command(String.format("insert into %s content %s", document.getType(), convertObjectToJsonString(document)))
+        var documentName = entityConverter.getMappingContext().getRequiredPersistentEntity(document.getClass()).getDocumentType();
+        return command(String.format("insert into %s content %s", documentName, convertObjectToJsonString(document)))
                 .elementAt(0)
                 .map(item -> convertMapToObject((Class<T>)document.getClass(), item));
     }
@@ -160,28 +154,28 @@ public class ArcadedbTemplate implements ArcadedbOperations {
     }
 
     @Override
-    public <T> Flux<T> select(String command, Class<T> objectType) {
+    public <T extends IdentifiableDocumentBase> Flux<T> select(String command, Class<T> objectType) {
         return select(CommandLanguage.SQL, command, null, objectType, this::convertMapToObject);
     }
 
     @Override
-    public <T> Flux<T> select(String command, Map<String, Object> params, Class<T> objectType) {
+    public <T extends IdentifiableDocumentBase> Flux<T> select(String command, Map<String, Object> params, Class<T> objectType) {
         return select(CommandLanguage.SQL, command, params, objectType, this::convertMapToObject);
     }
 
     @Override
-    public <T> Flux<T> select(CommandLanguage language, String command, Class<T> objectType) {
+    public <T extends IdentifiableDocumentBase> Flux<T> select(CommandLanguage language, String command, Class<T> objectType) {
         return select(language, command, null, objectType, this::convertMapToObject);
     }
 
     @Override
-    public <T> Flux<T> select(CommandLanguage language, String command, Map<String, Object> params,
+    public <T extends IdentifiableDocumentBase> Flux<T> select(CommandLanguage language, String command, Map<String, Object> params,
                               Class<T> objectType) {
         return select(language, command, params, objectType, this::convertMapToObject);
     }
 
     @Override
-    public <T> Flux<T> select(CommandLanguage language, String command, Map<String, Object> params,
+    public <T extends IdentifiableDocumentBase> Flux<T> select(CommandLanguage language, String command, Map<String, Object> params,
                               Class<T> objectType, BiFunction<Class<T>, Map<String, Object>, T> mapper) {
         return new CommandExchange(language, command, databaseName, params, webClient)
                 .exchange()
@@ -214,7 +208,8 @@ public class ArcadedbTemplate implements ArcadedbOperations {
     public <T extends IdentifiableDocumentBase> Mono<Void> deleteDocument(T document) {
         Assert.notNull(document, "Document must not be empty");
         Assert.notNull(document.getRid(), "RID of document must not be empty");
-        return deleteById(document.getRid(), document.getType());
+        var documentName = entityConverter.getMappingContext().getRequiredPersistentEntity(document.getClass()).getDocumentType();
+        return deleteById(document.getRid(), documentName);
     }
 
     @Override
@@ -241,27 +236,13 @@ public class ArcadedbTemplate implements ArcadedbOperations {
     }
 
     @Override
-    public <T> Mono<T> findById(String rid, Class<T> objectType) {
+    public <T extends IdentifiableDocumentBase> Mono<T> findById(String rid, Class<T> objectType) {
         return select(String.format("select from [%s]", rid), objectType).elementAt(0);
     }
 
     @Override
     public Mono<Boolean> exists(String rid) {
         return command(String.format("select from [%s]", rid)).hasElements();
-    }
-
-    private <T> T convertMapToObject(Class<T> objectType, Map<String, Object> map) {
-        return objectMapper.convertValue(map, objectType);
-    }
-
-    private <T> String convertObjectToJsonString(T object) {
-        try {
-            var json = objectMapper.writeValueAsString(object);
-            log.debug("object converted %s", json);
-            return objectMapper.writeValueAsString(object);
-        } catch (JsonProcessingException ex) {
-            throw new ConversionException(String.format("cannot convert object %s", object.toString()), ex);
-        }
     }
 
     public TransactionalArcadeddbTemplate transactional() {
@@ -279,5 +260,16 @@ public class ArcadedbTemplate implements ArcadedbOperations {
     @Override
     public ArcadeclientEntityConverter getConverter() {
         return entityConverter;
+    }
+
+
+    private String convertObjectToJsonString(Object object) {
+        var buffer = new StringBuffer();
+        entityConverter.write(object, buffer);
+        return buffer.toString();
+    }
+
+    private <T extends IdentifiableDocumentBase> T convertMapToObject(Class<T> aClass, Map<String, Object> item) {
+        return entityConverter.read(aClass, item);
     }
 }

@@ -77,8 +77,8 @@ public class ArcadedbTemplateIT {
                         && event.getFormattedMessage().contains("already exists")))
                 .hasSize(1);
 
-        assertThat(template.command("create vertex type Client").blockFirst()).contains(entry("operation",
-                "create vertex type"), entry("typeName", "Client"));
+        assertThat(template.command("create vertex type Kunde").blockFirst()).contains(entry("operation",
+                "create vertex type"), entry("typeName", "Kunde"));
         assertThat(template.command("create document type Address").blockFirst()).contains(entry("operation",
                 "create document type"), entry("typeName", "Address"));
     }
@@ -176,10 +176,10 @@ public class ArcadedbTemplateIT {
         var customer1 = new Customer();
         customer1.setAddress(address);
         customer1.setName("ABC Electronics");
-        assertThat(template.insert("Customer", customer1).block())
+        assertThat(template.insert("Kunde", customer1).block())
                 .hasFieldOrPropertyWithValue("name", "ABC Electronics")
                 .matches(cu -> cu.get("@cat") != null && cu.get("@rid") != null
-                        && cu.get("@type").equals("Customer"), "no valid vertex")
+                        && cu.get("@type").equals("Kunde"), "no valid vertex")
                 .matches(cu -> cu.get("address") != null
                         && ((Map)cu.get("address")).get("street").equals("Städelstraße"));
 
@@ -189,7 +189,7 @@ public class ArcadedbTemplateIT {
         assertThat(template.insertDocument(customer2).block())
                 .hasFieldOrPropertyWithValue("name", "XYZ Electronics")
                 .matches(cu -> cu.getCat() != null && cu.getRid() != null
-                        && cu.getType().equals("Customer"), "no valid vertex")
+                        && cu.getType().equals("Kunde"), "no valid vertex")
                 .matches(cu -> cu.getAddress() != null
                         && cu.getAddress().getStreet().equals("Städelstraße"));
     }
@@ -285,8 +285,8 @@ public class ArcadedbTemplateIT {
                         .equals(Level.ERROR)
                         && event.getFormattedMessage().contains("was not found")));
 
-        assertThat(template.command("drop type Client unsafe").blockFirst())
-                .contains(entry("operation", "drop type"), entry("typeName", "Client"));
+        assertThat(template.command("drop type Kunde unsafe").blockFirst())
+                .contains(entry("operation", "drop type"), entry("typeName", "Kunde"));
     }
 
     @Test

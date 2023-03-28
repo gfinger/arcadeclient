@@ -1,5 +1,6 @@
 package org.makkiato.arcadeclient.data.operations;
 
+import org.makkiato.arcadeclient.data.base.IdentifiableDocumentBase;
 import org.makkiato.arcadeclient.data.mapping.ArcadeclientEntityConverter;
 import org.springframework.core.io.Resource;
 import reactor.core.publisher.Flux;
@@ -27,16 +28,16 @@ public interface GenericArcadedbOperations {
 
     Flux<Map<String, Object>> command(CommandLanguage language, String command, Map<String, Object> params);
 
-    <T> Flux<T> select(String command, Class<T> objectType);
+    <T extends IdentifiableDocumentBase> Flux<T> select(String command, Class<T> objectType);
 
-    <T> Flux<T> select(String command, Map<String, Object> params, Class<T> objectType);
+    <T extends IdentifiableDocumentBase> Flux<T> select(String command, Map<String, Object> params, Class<T> objectType);
 
-    <T> Flux<T> select(CommandLanguage language, String command, Class<T> objectType);
+    <T extends IdentifiableDocumentBase> Flux<T> select(CommandLanguage language, String command, Class<T> objectType);
 
-    <T> Flux<T> select(CommandLanguage language, String command, Map<String, Object> params,
+    <T extends IdentifiableDocumentBase> Flux<T> select(CommandLanguage language, String command, Map<String, Object> params,
                        Class<T> objectType);
 
-    <T> Flux<T> select(CommandLanguage language, String command, Map<String, Object> params,
+    <T extends IdentifiableDocumentBase> Flux<T> select(CommandLanguage language, String command, Map<String, Object> params,
                           Class<T> objectType, BiFunction<Class<T>, Map<String, Object>, T> mapper);
 
     Flux<Map<String, Object>> query(String query);

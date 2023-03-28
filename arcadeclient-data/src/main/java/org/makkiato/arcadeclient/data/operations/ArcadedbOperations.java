@@ -19,7 +19,7 @@ public interface ArcadedbOperations extends GenericArcadedbOperations {
 
     <T extends IdentifiableDocumentBase> Mono<T> mergeDocument(T document);
 
-    <T> Mono<T> findById(String rid, Class<T> objectType);
+    <T extends IdentifiableDocumentBase> Mono<T> findById(String rid, Class<T> objectType);
 
     Mono<Long> count(String documentName);
 

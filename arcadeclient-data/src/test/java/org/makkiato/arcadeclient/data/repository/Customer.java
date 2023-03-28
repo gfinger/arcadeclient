@@ -1,14 +1,13 @@
 package org.makkiato.arcadeclient.data.repository;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
-
 import lombok.Getter;
 import lombok.Setter;
+import org.makkiato.arcadeclient.data.base.Document;
 import org.makkiato.arcadeclient.data.base.VertexBase;
 
 @Getter
 @Setter
-@JsonTypeName("Customer")
+@Document("Kunde")
 public class Customer extends VertexBase {
     private String name;
     private Address address;

@@ -1,12 +1,7 @@
 package org.makkiato.arcadeclient.data.repository;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.makkiato.arcadeclient.data.base.Document;
 import org.makkiato.arcadeclient.data.base.VertexBase;
 
 @Getter
@@ -14,7 +9,7 @@ import org.makkiato.arcadeclient.data.base.VertexBase;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonTypeName("Book")
+@Document("Book")
 public class Book extends VertexBase {
     private String title;
     private Person[] authors;
