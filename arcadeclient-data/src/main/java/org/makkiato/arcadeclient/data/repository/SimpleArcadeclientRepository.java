@@ -2,7 +2,7 @@ package org.makkiato.arcadeclient.data.repository;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.makkiato.arcadeclient.data.base.IdentifiableDocumentBase;
-import org.makkiato.arcadeclient.data.operations.ArcadedbOperations;
+import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
 import org.reactivestreams.Publisher;
 import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
@@ -13,11 +13,11 @@ import java.util.stream.StreamSupport;
 
 public class SimpleArcadeclientRepository<T extends IdentifiableDocumentBase, ID> implements ArcadeclientCrudRepository<T> {
 
-    private final ArcadedbOperations operations;
+    private final ArcadedbTemplate operations;
     private final Class<T> domainType;
     private final String documentName;
 
-    public SimpleArcadeclientRepository(ArcadedbOperations operations, Class<T> domainType) {
+    public SimpleArcadeclientRepository(ArcadedbTemplate operations, Class<T> domainType) {
         Assert.notNull(operations, "ArcadedbOperations must not be null");
         Assert.notNull(domainType, "Domain Type must not be null");
         this.operations = operations;
@@ -70,8 +70,7 @@ public class SimpleArcadeclientRepository<T extends IdentifiableDocumentBase, ID
 
     @Override
     public Flux<T> findAll() {
-        var command = String.format("select from %s", documentName);
-        return operations.select(command, domainType);
+        return operations.findAll(domainType);
     }
 
     @Override

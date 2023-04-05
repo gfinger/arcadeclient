@@ -1,4 +1,4 @@
-package org.makkiato.arcadeclient.data.repository;
+package org.makkiato.arcadeclient.data.operations;
 
 import org.makkiato.arcadeclient.data.config.ArcadeclientConfigurationSupport;
 import org.makkiato.arcadeclient.data.core.ArcadedbProperties;

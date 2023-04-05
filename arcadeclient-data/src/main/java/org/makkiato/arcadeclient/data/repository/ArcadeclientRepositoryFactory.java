@@ -2,7 +2,7 @@ package org.makkiato.arcadeclient.data.repository;
 
 import org.makkiato.arcadeclient.data.mapping.ArcadeclientPersistentEntity;
 import org.makkiato.arcadeclient.data.mapping.ArcadeclientPersistentProperty;
-import org.makkiato.arcadeclient.data.operations.ArcadedbOperations;
+import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.data.repository.core.RepositoryInformation;
@@ -10,13 +10,13 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.ReactiveRepositoryFactorySupport;
 
 public class ArcadeclientRepositoryFactory extends ReactiveRepositoryFactorySupport {
-    private final ArcadedbOperations operations;
+    private final ArcadedbTemplate operations;
 
     private final MappingContext<? extends ArcadeclientPersistentEntity<?>, ArcadeclientPersistentProperty> mappingContext;
 
-    public ArcadeclientRepositoryFactory(ArcadedbOperations operations) {
+    public ArcadeclientRepositoryFactory(ArcadedbTemplate operations) {
         this.operations = operations;
-        this.mappingContext = operations.getConverter().getMappingContext();
+        this.mappingContext = operations.getEntityConverter().getMappingContext();
     }
 
     @Override

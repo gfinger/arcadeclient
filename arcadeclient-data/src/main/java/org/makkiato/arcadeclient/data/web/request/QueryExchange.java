@@ -1,6 +1,6 @@
 package org.makkiato.arcadeclient.data.web.request;
 
-import org.makkiato.arcadeclient.data.operations.GenericArcadedbOperations;
+import org.makkiato.arcadeclient.data.operations.GenericOperations;
 import org.makkiato.arcadeclient.data.web.response.CommandResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -12,9 +12,9 @@ public class QueryExchange implements Exchange<CommandResponse> {
     private final String name;
     private final WebClient webClient;
     private final String queryPathSegment;
-    private final GenericArcadedbOperations.CommandLanguage language;
+    private final GenericOperations.CommandLanguage language;
 
-    public QueryExchange(GenericArcadedbOperations.CommandLanguage language, String query, String name, WebClient webClient) {
+    public QueryExchange(GenericOperations.CommandLanguage language, String query, String name, WebClient webClient) {
         this.name = name;
         this.webClient = webClient;
         this.queryPathSegment = query;

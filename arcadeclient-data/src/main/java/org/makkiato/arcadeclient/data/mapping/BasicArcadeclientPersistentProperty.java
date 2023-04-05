@@ -1,6 +1,6 @@
 package org.makkiato.arcadeclient.data.mapping;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import org.makkiato.arcadeclient.data.base.Rid;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
@@ -21,7 +21,7 @@ public class BasicArcadeclientPersistentProperty extends AnnotationBasedPersiste
                                                PersistentEntity<?, ArcadeclientPersistentProperty> owner,
                                                SimpleTypeHolder simpleTypeHolder) {
         super(property, owner, simpleTypeHolder);
-        var jsonProperty = property.getField().orElseThrow().getAnnotation(JsonProperty.class);
+        var jsonProperty = property.getField().orElseThrow().getAnnotation(Rid.class);
         if (jsonProperty != null) {
             var propertyName = jsonProperty.value();
             isIdProperty = propertyName.equals("@rid");

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.cfg.MapperConfig;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMethod;
-import org.makkiato.arcadeclient.data.Type;
+import org.makkiato.arcadeclient.data.base.Type;
 import org.makkiato.arcadeclient.data.base.Category;
 import org.makkiato.arcadeclient.data.base.Rid;
 import org.makkiato.arcadeclient.data.exception.client.ConversionException;

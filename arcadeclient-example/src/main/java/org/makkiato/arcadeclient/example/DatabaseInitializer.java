@@ -15,6 +15,8 @@ public class DatabaseInitializer {
     private final ArcadedbTemplate template;
     @Value("classpath:customer-schema.sql")
     private Resource schema;
+    @Value("classpath:customer-data.sql")
+    private Resource data;
 
     public DatabaseInitializer(ArcadedbFactory factory, ArcadedbTemplate template) {
         this.factory = factory;
@@ -35,5 +37,13 @@ public class DatabaseInitializer {
                 return Mono.error(ex);
             }
         });
+    }
+
+    public Mono<Boolean> data() {
+        try {
+            return template.script(data);
+        } catch (IOException ex) {
+            return Mono.error(ex);
+        }
     }
 }

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JAVA</ID>
+  <OriginalElement />
+  <nodes>
+    <node x="-162.5" y="105.0">org.makkiato.arcadeclient.data.operations.TransactionalOperations</node>
+    <node x="860.5" y="225.0">org.makkiato.arcadeclient.data.operations.BasicTemplate</node>
+    <node x="849.5" y="105.0">org.makkiato.arcadeclient.data.operations.BasicOperations</node>
+    <node x="185.5" y="225.0">org.makkiato.arcadeclient.data.operations.ConversionAwareTemplate</node>
+    <node x="604.0" y="225.0">org.makkiato.arcadeclient.data.operations.ArcadedbTemplate</node>
+    <node x="174.5" y="105.0">org.makkiato.arcadeclient.data.operations.ConversionAwareOperations</node>
+    <node x="218.5" y="-15.0">org.makkiato.arcadeclient.data.operations.GenericOperations</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="org.makkiato.arcadeclient.data.operations.ArcadedbTemplate" target="org.makkiato.arcadeclient.data.operations.BasicOperations" relationship="REALIZATION">
+      <point x="0.0" y="-15.0" />
+      <point x="717.0" y="180.0" />
+      <point x="957.0" y="180.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.makkiato.arcadeclient.data.operations.ArcadedbTemplate" target="org.makkiato.arcadeclient.data.operations.ConversionAwareOperations" relationship="REALIZATION">
+      <point x="0.0" y="-15.0" />
+      <point x="717.0" y="200.0" />
+      <point x="337.0" y="200.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.makkiato.arcadeclient.data.operations.BasicOperations" target="org.makkiato.arcadeclient.data.operations.GenericOperations" relationship="INTERFACE_GENERALIZATION">
+      <point x="0.0" y="-15.0" />
+      <point x="957.0" y="80.0" />
+      <point x="337.0" y="80.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.makkiato.arcadeclient.data.operations.ConversionAwareTemplate" target="org.makkiato.arcadeclient.data.operations.ConversionAwareOperations" relationship="REALIZATION">
+      <point x="0.0" y="-15.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.makkiato.arcadeclient.data.operations.BasicTemplate" target="org.makkiato.arcadeclient.data.operations.BasicOperations" relationship="REALIZATION">
+      <point x="0.0" y="-15.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.makkiato.arcadeclient.data.operations.ConversionAwareOperations" target="org.makkiato.arcadeclient.data.operations.GenericOperations" relationship="INTERFACE_GENERALIZATION">
+      <point x="0.0" y="-15.0" />
+      <point x="0.0" y="15.0" />
+    </edge>
+    <edge source="org.makkiato.arcadeclient.data.operations.TransactionalOperations" target="org.makkiato.arcadeclient.data.operations.GenericOperations" relationship="INTERFACE_GENERALIZATION">
+      <point x="-0.0" y="-15.0" />
+      <point x="-11.0" y="0.0" />
+      <point x="-118.5" y="-0.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Compact" zoom="1.5" showDependencies="false" x="292.5" y="130.0" />
+  <SelectedNodes>
+    <node>org.makkiato.arcadeclient.data.operations.TransactionalOperations</node>
+  </SelectedNodes>
+  <Categories />
+  <SCOPE>All</SCOPE>
+  <VISIBILITY>private</VISIBILITY>
+</Diagram>
+

@@ -22,6 +22,7 @@ public class BasicArcadeclientPersistentEntity<T> extends BasicPersistentEntity<
         super(information, Comparator.comparing(PersistentProperty::getName));
 
         var annotatedName = AnnotationUtils.getAnnotation(information.getType(), Document.class);
-        this.documentType = annotatedName != null ? annotatedName.value() : this.getClass().getSimpleName();
+        this.documentType = annotatedName != null && annotatedName.value() != null && !annotatedName.value().isEmpty() ?
+                annotatedName.value() : information.getType().getSimpleName();
     }
 }

@@ -1,10 +1,10 @@
 package org.makkiato.arcadedb.console.shell;
 
-import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
 import org.makkiato.arcadeclient.data.core.ArcadedbFactory;
 import org.makkiato.arcadeclient.data.core.ArcadedbProperties;
 import org.makkiato.arcadeclient.data.core.WebClientFactory;
 import org.makkiato.arcadeclient.data.exception.client.ArcadeClientConfigurationException;
+import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.shell.Availability;

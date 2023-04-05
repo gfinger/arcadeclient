@@ -32,4 +32,19 @@ class BasicArcadeclientPersistentEntityTest {
         assertThat(addressEntity).noneMatch(ArcadeclientPersistentProperty::isIdProperty);
 
     }
+
+    @Test
+    void getDocumentType() {
+        var customerTypeInformation = TypeInformation.of(Customer.class);
+        var customerEntity = mappingContext.getPersistentEntity(customerTypeInformation);
+        assertThat(customerEntity.getDocumentType()).isEqualTo("Kunde");
+
+        var addressTypeInformation = TypeInformation.of(Address.class);
+        var addressEntity = mappingContext.getPersistentEntity(addressTypeInformation);
+        assertThat(addressEntity.getDocumentType()).isEqualTo("Address");
+
+        var personTypeInformation = TypeInformation.of(Person.class);
+        var personEntity = mappingContext.getPersistentEntity(personTypeInformation);
+        assertThat(personEntity.getDocumentType()).isEqualTo("Person");
+    }
 }

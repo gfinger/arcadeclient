@@ -1,4 +1,4 @@
-package org.makkiato.arcadeclient.data.repository;
+package org.makkiato.arcadeclient.data.operations;
 
 import lombok.Getter;
 import lombok.Setter;

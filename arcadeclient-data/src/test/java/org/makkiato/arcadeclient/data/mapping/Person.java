@@ -1,4 +1,4 @@
-package org.makkiato.arcadeclient.data.repository;
+package org.makkiato.arcadeclient.data.mapping;
 
 import lombok.*;
 import org.makkiato.arcadeclient.data.base.Document;
@@ -9,7 +9,7 @@ import org.makkiato.arcadeclient.data.base.VertexBase;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Document("Person")
+@Document
 public class Person extends VertexBase {
     private String name;
 }

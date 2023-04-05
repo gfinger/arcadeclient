@@ -1,7 +1,6 @@
 package org.makkiato.arcadeclient.data.mapping;
 
 import org.junit.jupiter.api.Test;
-import org.makkiato.arcadeclient.data.base.Customer;
 
 import java.util.Map;
 

@@ -1,10 +1,8 @@
 package org.makkiato.arcadeclient.example;
 
-import org.makkiato.arcadeclient.data.core.ArcadedbFactory;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -19,5 +17,10 @@ public class InitController {
     @PostMapping("schema")
     public Mono<Boolean> schema() {
         return databaseInitializer.schema();
+    }
+
+    @PostMapping("data")
+    public Mono<Boolean> data() {
+        return databaseInitializer.data();
     }
 }

@@ -1,4 +1,4 @@
-package org.makkiato.arcadeclient.data.repository;
+package org.makkiato.arcadeclient.data.operations;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -9,7 +9,6 @@ import org.junit.jupiter.api.*;
 import org.makkiato.arcadeclient.data.core.ArcadedbFactory;
 import org.makkiato.arcadeclient.data.exception.server.IllegalArgumentException;
 import org.makkiato.arcadeclient.data.exception.server.*;
-import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
 import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilterImpl;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -176,7 +175,7 @@ public class ArcadedbTemplateIT {
         var customer1 = new Customer();
         customer1.setAddress(address);
         customer1.setName("ABC Electronics");
-        assertThat(template.insert("Kunde", customer1).block())
+        assertThat(template.insert("Kunde", template.convertObjectToJsonString(customer1)).block())
                 .hasFieldOrPropertyWithValue("name", "ABC Electronics")
                 .matches(cu -> cu.get("@cat") != null && cu.get("@rid") != null
                         && cu.get("@type").equals("Kunde"), "no valid vertex")

@@ -63,6 +63,7 @@ public abstract class ArcadeclientConfigurationSupport {
     public ArcadeclientManagedTypes arcadeclientManagedTypes() throws ClassNotFoundException {
         return ArcadeclientManagedTypes.fromIterable(getInitialEntitySet());
     }
+
     @Bean
     public ArcadedbFactory arcadedbFactory(ArcadedbProperties properties, WebClientFactory webClientFactory) {
         return new ArcadedbFactory(webClientFactory, properties.getConnectionPropertiesFor(null));
@@ -72,8 +73,9 @@ public abstract class ArcadeclientConfigurationSupport {
     public ArcadedbTemplate arcadedbTemplate(ArcadedbProperties properties, WebClientFactory webClientFactory,
                                              ArcadeclientMappingContext arcadeclientMappingContext) {
         var connectionProperties = properties.getConnectionPropertiesFor(null);
-        return new ArcadedbTemplate(webClientFactory.getWebClientSupplierFor(connectionProperties).get(),
-                connectionProperties.getDatabase(), new MappingArcadeclientConverter(arcadeclientMappingContext) {
+        return new ArcadedbTemplate(connectionProperties.getDatabase(),
+                webClientFactory.getWebClientSupplierFor(connectionProperties).get(),
+                new MappingArcadeclientConverter(arcadeclientMappingContext) {
         });
     }
 }
