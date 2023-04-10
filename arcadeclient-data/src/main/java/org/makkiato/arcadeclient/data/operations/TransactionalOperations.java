@@ -1,18 +1,12 @@
 package org.makkiato.arcadeclient.data.operations;
 
-import org.makkiato.arcadeclient.data.web.request.CommitTAExchange;
-import org.makkiato.arcadeclient.data.web.request.RollbackTAExchange;
 import org.makkiato.arcadeclient.data.web.response.EmptyResponse;
 import reactor.core.publisher.Mono;
 
-public interface TransactionalOperations extends GenericOperations {
+public interface TransactionalOperations extends BasicOperations, AutoCloseable {
 
-    default Mono<EmptyResponse> commit() {
-        return new CommitTAExchange(getDatabaseName(), getWebClient()).exchange();
-    }
+    Mono<EmptyResponse> commit();
 
-    default Mono<EmptyResponse> rollback() {
-        return new RollbackTAExchange(getDatabaseName(), getWebClient()).exchange();
-    }
+    Mono<EmptyResponse> rollback();
 
 }
