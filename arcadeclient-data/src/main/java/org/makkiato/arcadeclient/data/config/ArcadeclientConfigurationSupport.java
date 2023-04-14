@@ -7,6 +7,10 @@ import org.makkiato.arcadeclient.data.core.WebClientFactory;
 import org.makkiato.arcadeclient.data.mapping.ArcadeclientMappingContext;
 import org.makkiato.arcadeclient.data.mapping.MappingArcadeclientConverter;
 import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
+import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilter;
+import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilterImpl;
+import org.makkiato.arcadeclient.data.web.client.HALeaderWebClientSupplierStrategy;
+import org.makkiato.arcadeclient.data.web.client.WebClientSupplierStrategy;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
@@ -50,6 +54,22 @@ public abstract class ArcadeclientConfigurationSupport {
                             ArcadeclientConfigurationSupport.class.getClassLoader()));
         }
         return initialEntitySet;
+    }
+
+    @Bean
+    public ArcadedbErrorResponseFilter arcadedbErrorResponseFilter() {
+        return new ArcadedbErrorResponseFilterImpl();
+    }
+
+    @Bean
+    public WebClientSupplierStrategy webClientSupplierStrategy() {
+        return new HALeaderWebClientSupplierStrategy();
+    }
+
+    @Bean
+    public WebClientFactory webClientFactory(ArcadedbErrorResponseFilter arcadedbErrorResponseFilter,
+                                             WebClientSupplierStrategy webClientSupplierStrategy) {
+        return new WebClientFactory(arcadedbErrorResponseFilter, webClientSupplierStrategy);
     }
 
     @Bean

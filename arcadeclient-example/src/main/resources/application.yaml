@@ -1,4 +1,4 @@
-debug: true
+debug: false
 org:
     makkiato:
         arcadedb:
@@ -13,7 +13,7 @@ org:
 logging:
     level:
         org:
-            springframework: TRACE
+            springframework: INFO
 
 spring:
     main:

@@ -1,0 +1,15 @@
+= Makkiato Arcadeclient Manual
+:toc:
+:toclevels: 3
+:sectnums:
+:sectnumlevels: 3
+:example-caption!:
+:imagesdir: images
+ifdef::backend-pdf[:imagesdir: {docdir}/{imagesdir}]
+:doctype: book
+:encoding: utf-8
+:lang: en
+:source-highlighter: rouge
+
+include::version.adoc[]
+include::content.adoc[]
