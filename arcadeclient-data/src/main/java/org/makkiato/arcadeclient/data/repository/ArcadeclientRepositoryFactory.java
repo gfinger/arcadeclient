@@ -8,6 +8,10 @@ import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.ReactiveRepositoryFactorySupport;
+import org.springframework.data.repository.query.QueryLookupStrategy;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+
+import java.util.Optional;
 
 public class ArcadeclientRepositoryFactory extends ReactiveRepositoryFactorySupport {
     private final ArcadedbTemplate operations;
@@ -32,5 +36,10 @@ public class ArcadeclientRepositoryFactory extends ReactiveRepositoryFactorySupp
     @Override
     protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
         return SimpleArcadeclientRepository.class;
+    }
+
+    @Override
+    protected Optional<QueryLookupStrategy> getQueryLookupStrategy(QueryLookupStrategy.Key key, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+        return Optional.of(new ArcadeclientQueryLookupStrategy(operations, mappingContext, evaluationContextProvider));
     }
 }

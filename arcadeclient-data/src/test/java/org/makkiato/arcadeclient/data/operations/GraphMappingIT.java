@@ -36,7 +36,7 @@ public class GraphMappingIT {
     @Autowired
     private ArcadedbTemplate connection;
 
-    @Value("classpath:types.graphqls")
+    @Value("classpath:types.graphql")
     private Resource graphqlscript;
 
     private ListAppender<ILoggingEvent> logWatcher;

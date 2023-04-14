@@ -62,7 +62,7 @@ public class ArcadedbErrorResponseFilterImpl implements ArcadedbErrorResponseFil
                                 status.value()));
                     case "java.lang.SecurityException" ->
                         Mono.error(new SecurityException(error.getError(), status.value()));
-                    case "com.arcadedb.query.sql.parser.ParseException" ->
+                    case "com.arcadedb.query.sql.parser.ParseException", "com.arcadedb.graphql.parser.ParseException" ->
                         Mono.error(new ParseException(error.getDetail(), status.value()));
                     case "com.arcadedb.exception.DatabaseOperationException" ->
                         Mono.error(new DatabaseOperationException(error.getDetail(),

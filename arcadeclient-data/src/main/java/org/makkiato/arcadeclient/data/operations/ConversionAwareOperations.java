@@ -48,7 +48,7 @@ public interface ConversionAwareOperations extends GenericOperations {
     <T extends IdentifiableDocumentBase> Flux<T> select(CommandLanguage language, String command, Map<String,
             Object> params, Class<T> entityType);
 
-    <T extends IdentifiableDocumentBase> Flux<T> select(CommandLanguage language, String command, Map<String,
+    <T> Flux<T> select(CommandLanguage language, String command, Map<String,
             Object> params, Class<T> entityType, BiFunction<Class<T>, Map<String, Object>, T> mapper);
 
     default <T extends IdentifiableDocumentBase> Mono<Void> deleteDocument(T entity) {
@@ -93,7 +93,7 @@ public interface ConversionAwareOperations extends GenericOperations {
 
     String convertObjectToJsonString(Object object);
 
-    <T extends DocumentBase> T convertMapToObject(Class<T> entityType, Map<String, Object> item);
+    <T> T convertMapToObject(Class<T> entityType, Map<String, Object> item);
 
     <T extends DocumentBase> T convertMapToObject(Map<String, Object> item);
 

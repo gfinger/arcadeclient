@@ -23,4 +23,9 @@ public class InitController {
     public Mono<Boolean> data() {
         return databaseInitializer.data();
     }
+
+    @PostMapping("types")
+    public Mono<Boolean> types() {
+        return databaseInitializer.types();
+    }
 }

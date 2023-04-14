@@ -16,4 +16,5 @@ public class Address extends DocumentBase {
     private String city;
     private String phone;
 
+    public static record AddressOnlyCity(String city){}
 }

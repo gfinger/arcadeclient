@@ -1,0 +1,24 @@
+type Person {
+    name:String
+}
+type Address {
+    city:String
+    street:String
+}
+type AddressOnlyCity {
+    city:String
+}
+type Customer {
+    name:String
+    address:Address
+}
+type CustomerWithContacts {
+    name:String
+    address:AddressOnlyCity
+    contacts:[Person] @relationship(type:"IsContactOf", direction:IN)
+}
+type Query {
+    customersByCity(city:String):[Customer] @sql(statement: "select from Customer where address.city = :city")
+    contactsOfCustomer(name:String):[Person] @sql(statement: "select from Person where out(IsContactOf).name = :name")
+    customerWithContacts(name:String):[CustomerWithContacts] @sql(statement: "select from Customer where name = :name")
+}

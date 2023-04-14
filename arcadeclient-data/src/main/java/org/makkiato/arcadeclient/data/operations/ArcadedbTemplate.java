@@ -224,7 +224,7 @@ public class ArcadedbTemplate implements GenericOperations, BasicOperations, Con
         return select(language, command, params, entityType, this::convertMapToObject);
     }
 
-    public <T extends IdentifiableDocumentBase> Flux<T> select(CommandLanguage language, String command, Map<String,
+    public <T> Flux<T> select(CommandLanguage language, String command, Map<String,
             Object> params, Class<T> entityType, BiFunction<Class<T>, Map<String, Object>, T> mapper) {
         return new CommandExchange(language, command, getDatabaseName(), params, getWebClient())
                 .exchange()
@@ -326,7 +326,7 @@ public class ArcadedbTemplate implements GenericOperations, BasicOperations, Con
         return buffer.toString();
     }
 
-    public <T extends DocumentBase> T convertMapToObject(Class<T> entityType, Map<String, Object> item) {
+    public <T> T convertMapToObject(Class<T> entityType, Map<String, Object> item) {
         return getEntityConverter().read(entityType, item);
     }
 

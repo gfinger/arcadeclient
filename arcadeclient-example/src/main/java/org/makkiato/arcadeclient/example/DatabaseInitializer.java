@@ -2,6 +2,7 @@ package org.makkiato.arcadeclient.example;
 
 import org.makkiato.arcadeclient.data.core.ArcadedbFactory;
 import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
+import org.makkiato.arcadeclient.data.operations.GenericOperations;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,8 @@ public class DatabaseInitializer {
     private Resource schema;
     @Value("classpath:customer-data.sql")
     private Resource data;
+    @Value("classpath:types.graphql")
+    private Resource types;
 
     public DatabaseInitializer(ArcadedbFactory factory, ArcadedbTemplate template) {
         this.factory = factory;
@@ -42,6 +45,14 @@ public class DatabaseInitializer {
     public Mono<Boolean> data() {
         try {
             return template.script(data);
+        } catch (IOException ex) {
+            return Mono.error(ex);
+        }
+    }
+
+    public Mono<Boolean> types() {
+        try {
+            return template.script(GenericOperations.CommandLanguage.GRAPHQL, types, null);
         } catch (IOException ex) {
             return Mono.error(ex);
         }
