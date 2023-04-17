@@ -3,7 +3,7 @@ services:
   devcontainer:
     build:
       context: .
-      dockerfile: Client-Dockerfile
+      image: maven:3.9.1
     volumes:
       - ../..:/workspaces:cached
     network_mode: service:db
