@@ -12,7 +12,7 @@ jobs:
 
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:latest
+      image: maven:3.9.1
       ports:
         - 2480
     steps:
