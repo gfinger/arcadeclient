@@ -10,8 +10,6 @@ services:
     command: sleep infinity
 
   db:
-    command: ./bin/server.sh
-    working_dir: /arcadedb
     build: 
       context: .
       dockerfile: Arcadedb-Dockerfile
