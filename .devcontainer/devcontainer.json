@@ -1,0 +1,18 @@
+{
+    "dockerComposeFile": "docker-compose.yaml",
+    "service": "devcontainer",
+    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+    "customizations": {
+        "vscode": {
+            "settings": {
+
+            },
+            "extensions": [
+                "vscjava.vscode-java-pack",
+                "redhat.vscode-xml",
+                "redhat.fabric8-analytics",
+                "vmware.vscode-boot-dev-pack"
+            ]
+        }
+    }
+}

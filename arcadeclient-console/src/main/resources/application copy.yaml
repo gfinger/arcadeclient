@@ -1,0 +1,16 @@
+debug: true
+org:
+    makkiato:
+        arcadedb:
+            connections:
+                arcadedb0:
+                    host: localhost
+                    port: 2480
+                    username: root
+                    password: playwithdata
+                    leader-preferred: true
+
+logging:   
+    level:
+        java:
+            net: TRACE

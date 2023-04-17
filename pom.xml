@@ -2,11 +2,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.makkiato.arcadedb.client</groupId>
+	<groupId>org.makkiato.arcadeclient</groupId>
 	<artifactId>parent</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<name>arcadeclient</name>
+	<name>Arcadeclient</name>
 	<description>Parent for Spring Boot based client for ArcadeDB</description>
 	<licenses>
         <license>
@@ -20,8 +20,11 @@
 	</properties>
 
 	<modules>
-		<module>arcadeclient</module>
-		<module>console</module>
+		<module>arcadeclient-data</module>
+		<module>arcadeclient-console</module>
+		<module>arcadeclient-autoconfigure</module>
+		<module>arcadeclient-example</module>
+		<module>arcadeclient-doc</module>
 	</modules>
 
 </project>

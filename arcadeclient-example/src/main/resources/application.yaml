@@ -1,0 +1,29 @@
+debug: false
+org:
+    makkiato:
+        arcadedb:
+            connection:
+                host: localhost
+                port: 2480
+                database: testdb
+                username: root
+                password: playwithdata
+                leader-preferred: true
+
+logging:
+    level:
+        org:
+            springframework: INFO
+
+spring:
+    main:
+        web-application-type: reactive
+
+management:
+  endpoints:
+    web:
+        exposure:
+            include: "*"
+    jmx:
+        exposure:
+            include: "*"

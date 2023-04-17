@@ -1,0 +1,11 @@
+type Person {
+    name:String
+}
+type Book {
+    title:String 
+    authors:[Person] @relationship(type:"AuthorOf", direction:IN)
+}
+type Query { 
+    bookByTitle(title:String):Book 
+    bookByAuthor(name:String):Book @sql(statement: "select from Book where in(AuthorOf).name = :name")
+}
