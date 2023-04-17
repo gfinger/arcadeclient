@@ -268,7 +268,7 @@ public class ArcadedbTemplate implements GenericOperations, BasicOperations, Con
     public <F extends VertexBase> Flux<VertexBase> outVertices(F from) {
         return command(String.format("select out() from %s", getDocumentTypeNameForEntityType(from.getClass())))
                 .flatMap(result -> Flux.fromIterable((Iterable) result.get("out()")))
-                .map(item -> convertMapToObject((Map) item));
+                .map(item -> (VertexBase)convertMapToObject((Map) item));
     }
 
     public <F extends VertexBase, E extends EdgeBase> Flux<VertexBase> outVertices(F from, Class<E> edgeType) {
@@ -276,7 +276,7 @@ public class ArcadedbTemplate implements GenericOperations, BasicOperations, Con
         return command(String.format("select out(%s) from %s", edgeDocumentName,
                 getDocumentTypeNameForEntityType(from.getClass())))
                 .flatMap(result -> Flux.fromIterable((Iterable) result.get(String.format("out(%s)", edgeDocumentName))))
-                .map(item -> convertMapToObject((Map) item));
+                .map(item -> (VertexBase) convertMapToObject((Map) item));
     }
 
     public <F extends VertexBase> Flux<EdgeBase> outEdges(F from) {
