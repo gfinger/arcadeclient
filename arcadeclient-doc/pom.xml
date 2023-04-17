@@ -18,10 +18,23 @@
         <asciidoctorj.diagram.version>2.2.7</asciidoctorj.diagram.version>
         <asciidoctorj.pdf.version>2.3.6</asciidoctorj.pdf.version>
         <jetty-maven-plugin.version>11.0.15</jetty-maven-plugin.version>
+        <maven-war-plugin.version>3.3.2</maven-war-plugin.version>
     </properties>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>${maven-war-plugin.version}</version>
+                <configuration>
+                  <archive>
+                    <manifest>
+                      <addClasspath>true</addClasspath>
+                    </manifest>
+                  </archive>
+                </configuration>
+              </plugin>
             <plugin>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-maven-plugin</artifactId>
