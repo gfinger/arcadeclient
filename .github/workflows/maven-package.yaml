@@ -15,6 +15,7 @@ jobs:
     services:
         arcadedb:
             image: gfinger/arcadedb:23.3.1
+            entrypoint: ./bin/server.sh
             ports:
                 - 2480:2480
     steps:
