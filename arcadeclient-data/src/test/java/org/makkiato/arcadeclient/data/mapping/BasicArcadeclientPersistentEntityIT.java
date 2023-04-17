@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.*;
         "org.makkiato.arcadedb.connections.arcadedb0.password=playwithdata",
         "org.makkiato.arcadedb.connections.arcadedb0.leader-preferred=true"
 })
-class BasicArcadeclientPersistentEntityTest {
+class BasicArcadeclientPersistentEntityIT {
     @Autowired
     ArcadeclientMappingContext mappingContext;
 
