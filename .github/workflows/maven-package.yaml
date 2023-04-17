@@ -15,6 +15,8 @@ jobs:
     services:
         arcadedb:
             image: gfinger/arcadedb:23.3.1
+            ports:
+                - 2480:2480
     steps:
     - uses: actions/checkout@v3
     - name: Build with Maven
