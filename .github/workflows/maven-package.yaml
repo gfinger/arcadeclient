@@ -1,10 +1,10 @@
 name: Java CI with Maven
 
 on:
-  push:
-    branches: [ $default-branch ]
   pull_request:
-    branches: [ $default-branch ]
+    branches:
+      - 'snapshots/**'
+      - 'releases/**'
   workflow_dispatch:
 
 jobs:
