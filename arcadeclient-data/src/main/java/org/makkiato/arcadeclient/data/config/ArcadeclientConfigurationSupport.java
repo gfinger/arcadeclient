@@ -6,6 +6,7 @@ import org.makkiato.arcadeclient.data.core.ArcadedbProperties;
 import org.makkiato.arcadeclient.data.core.WebClientFactory;
 import org.makkiato.arcadeclient.data.mapping.ArcadeclientMappingContext;
 import org.makkiato.arcadeclient.data.mapping.MappingArcadeclientConverter;
+import org.makkiato.arcadeclient.data.operations.ArcadedbOperations;
 import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
 import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilter;
 import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilterImpl;
@@ -90,7 +91,7 @@ public abstract class ArcadeclientConfigurationSupport {
     }
 
     @Bean
-    public ArcadedbTemplate arcadedbTemplate(ArcadedbProperties properties, WebClientFactory webClientFactory,
+    public ArcadedbOperations arcadedbOperations(ArcadedbProperties properties, WebClientFactory webClientFactory,
                                              ArcadeclientMappingContext arcadeclientMappingContext) {
         var connectionProperties = properties.getConnectionPropertiesFor(null);
         return new ArcadedbTemplate(connectionProperties.getDatabase(),

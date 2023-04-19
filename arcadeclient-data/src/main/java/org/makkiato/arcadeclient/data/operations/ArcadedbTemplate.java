@@ -23,7 +23,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class ArcadedbTemplate implements GenericOperations, BasicOperations, ConversionAwareOperations, TransactionalOperations {
+public class ArcadedbTemplate implements ArcadedbOperations, TransactionalOperations {
     private final String databaseName;
     private final WebClient webClient;
     private final ArcadeclientEntityConverter entityConverter;
