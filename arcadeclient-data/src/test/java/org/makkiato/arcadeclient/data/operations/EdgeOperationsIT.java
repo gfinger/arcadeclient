@@ -6,19 +6,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.makkiato.arcadeclient.data.core.ArcadedbFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+
 import reactor.test.StepVerifier;
 
 @SpringJUnitConfig(TestConfiguration.class)
-@TestPropertySource(properties = {
-        "org.makkiato.arcadedb.connections.arcadedb0.host=localhost",
-        "org.makkiato.arcadedb.connections.arcadedb0.port=2480",
-        "org.makkiato.arcadedb.connections.arcadedb0.database=xyz-edge-test",
-        "org.makkiato.arcadedb.connections.arcadedb0.username=root",
-        "org.makkiato.arcadedb.connections.arcadedb0.password=playwithdata",
-        "org.makkiato.arcadedb.connections.arcadedb0.leader-preferred=true"
-})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class EdgeOperationsIT {
     @Autowired

@@ -1,37 +1,42 @@
 package org.makkiato.arcadeclient.data.operations;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.entry;
+
+import java.io.IOException;
+import java.util.Map;
+
 import org.assertj.core.api.Condition;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.makkiato.arcadeclient.data.core.ArcadedbFactory;
+import org.makkiato.arcadeclient.data.exception.server.CommandExecutionException;
+import org.makkiato.arcadeclient.data.exception.server.DuplicatedKeyException;
 import org.makkiato.arcadeclient.data.exception.server.IllegalArgumentException;
-import org.makkiato.arcadeclient.data.exception.server.*;
+import org.makkiato.arcadeclient.data.exception.server.ParseException;
+import org.makkiato.arcadeclient.data.exception.server.SchemaException;
+import org.makkiato.arcadeclient.data.exception.server.ValidationException;
 import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilterImpl;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import reactor.test.StepVerifier;
 
-import java.io.IOException;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.*;
-
 @SpringJUnitConfig(TestConfiguration.class)
-@TestPropertySource(properties = {
-        "org.makkiato.arcadedb.connections.arcadedb0.host=localhost",
-        "org.makkiato.arcadedb.connections.arcadedb0.port=2480",
-        "org.makkiato.arcadedb.connections.arcadedb0.database=xyz-connection-test",
-        "org.makkiato.arcadedb.connections.arcadedb0.username=root",
-        "org.makkiato.arcadedb.connections.arcadedb0.password=playwithdata",
-        "org.makkiato.arcadedb.connections.arcadedb0.leader-preferred=true"
-})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ArcadedbTemplateIT {

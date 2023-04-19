@@ -15,7 +15,6 @@ import org.makkiato.arcadeclient.data.exception.server.IllegalArgumentException;
 import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilterImpl;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import ch.qos.logback.classic.Level;
@@ -24,20 +23,6 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 
 @SpringJUnitConfig(TestConfiguration.class)
-@TestPropertySource(properties = {
-        "org.makkiato.arcadedb.connections.default.host=localhost",
-        "org.makkiato.arcadedb.connections.default.port=2480",
-        "org.makkiato.arcadedb.connections.default.database=xyz-factory-test1",
-        "org.makkiato.arcadedb.connections.default.username=root",
-        "org.makkiato.arcadedb.connections.default.password=playwithdata",
-        "org.makkiato.arcadedb.connections.default.leader-preferred=true",
-        "org.makkiato.arcadedb.connections.arcadedb0.host=localhost",
-        "org.makkiato.arcadedb.connections.arcadedb0.port=2480",
-        "org.makkiato.arcadedb.connections.arcadedb0.database=xyz-factory-test2",
-        "org.makkiato.arcadedb.connections.arcadedb0.username=root",
-        "org.makkiato.arcadedb.connections.arcadedb0.password=playwithdata",
-        "org.makkiato.arcadedb.connections.arcadedb0.leader-preferred=true"
-})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ArcadedbFactoryIT {
@@ -52,7 +37,7 @@ class ArcadedbFactoryIT {
     @BeforeAll
     void init() {
         arcadedbFactory = new ArcadedbFactory(webClientFactory,
-                arcadedbProperties.getConnectionPropertiesFor("arcadedb0"));
+                arcadedbProperties.getConnectionPropertiesFor("default"));
     }
 
     @AfterAll
