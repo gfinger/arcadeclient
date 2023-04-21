@@ -1,0 +1,4 @@
+{
+    "language": "sql",
+    "command": "create document type Address if not exists;"
+}
