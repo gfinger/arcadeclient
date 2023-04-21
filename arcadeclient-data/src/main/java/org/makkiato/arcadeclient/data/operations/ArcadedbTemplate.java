@@ -23,15 +23,18 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class ArcadedbTemplate implements ArcadedbOperations, TransactionalOperations {
+public class ArcadedbTemplate implements ArcadedbOperations {
     private final String databaseName;
     private final WebClient webClient;
     private final ArcadeclientEntityConverter entityConverter;
+    private ExchangeFactory exchangeFactory;
 
-    public ArcadedbTemplate(String databaseName, WebClient webClient, ArcadeclientEntityConverter entityConverter) {
+    public ArcadedbTemplate(String databaseName, WebClient webClient, ArcadeclientEntityConverter entityConverter,
+            ExchangeFactory exchangeFactory) {
         this.databaseName = databaseName;
         this.webClient = webClient;
         this.entityConverter = entityConverter;
+        this.exchangeFactory = exchangeFactory;
     }
 
     @Override
@@ -49,7 +52,6 @@ public class ArcadedbTemplate implements ArcadedbOperations, TransactionalOperat
         return webClient;
     }
 
-
     public TransactionalOperations transactional() {
         return new BeginTAExchange(getDatabaseName(), getWebClient()).exchange()
                 .map(EmptyResponse::headers)
@@ -57,8 +59,9 @@ public class ArcadedbTemplate implements ArcadedbOperations, TransactionalOperat
                 .map(header -> header.get(ARCADEDB_SESSION_ID))
                 .filter(item -> !item.isEmpty())
                 .map(item -> item.get(0))
-                .map(id -> new ArcadedbTemplate(getDatabaseName(),
-                        getWebClient().mutate().defaultHeader(ARCADEDB_SESSION_ID, id).build(), entityConverter))
+                .map(id -> new TransactionalTemplate(getDatabaseName(),
+                        getWebClient().mutate().defaultHeader(ARCADEDB_SESSION_ID, id).build(), entityConverter,
+                        exchangeFactory))
                 .block(CONNECTION_TIMEOUT);
     }
 
@@ -104,7 +107,7 @@ public class ArcadedbTemplate implements ArcadedbOperations, TransactionalOperat
     }
 
     public Flux<Map<String, Object>> command(CommandLanguage language, String command, Map<String, Object> params) {
-        return new CommandExchange(language, command, getDatabaseName(), params, getWebClient())
+        return exchangeFactory.createCommandExchange(language, command, getDatabaseName(), params, getWebClient())
                 .exchange()
                 .map(CommandResponse::result)
                 .flatMapMany(Flux::fromArray);
@@ -116,7 +119,6 @@ public class ArcadedbTemplate implements ArcadedbOperations, TransactionalOperat
                 .map(CommandResponse::result)
                 .flatMapMany(Flux::fromArray);
     }
-
 
     /* BasicOperations */
 
@@ -158,12 +160,11 @@ public class ArcadedbTemplate implements ArcadedbOperations, TransactionalOperat
         return command(String.format("select from [%s]", rid)).hasElements();
     }
 
-
     /* ConversionAwareOperations */
 
     public <T extends IdentifiableDocumentBase> Mono<T> insertDocument(T entity) {
-        var documentTypeName =
-                getEntityConverter().getMappingContext().getRequiredPersistentEntity(entity.getClass()).getDocumentType();
+        var documentTypeName = getEntityConverter().getMappingContext().getRequiredPersistentEntity(entity.getClass())
+                .getDocumentType();
         return command(String.format("insert into %s content %s", documentTypeName, convertObjectToJsonString(entity)))
                 .elementAt(0)
                 .map(item -> convertMapToObject((Class<T>) entity.getClass(), item));
@@ -210,22 +211,22 @@ public class ArcadedbTemplate implements ArcadedbOperations, TransactionalOperat
     }
 
     public <T extends IdentifiableDocumentBase> Flux<T> select(String command, Map<String, Object> params,
-                                                               Class<T> entityType) {
+            Class<T> entityType) {
         return select(CommandLanguage.SQL, command, params, entityType, this::convertMapToObject);
     }
 
     public <T extends IdentifiableDocumentBase> Flux<T> select(CommandLanguage language, String command,
-                                                               Class<T> entityType) {
+            Class<T> entityType) {
         return select(language, command, null, entityType, this::convertMapToObject);
     }
 
-    public <T extends IdentifiableDocumentBase> Flux<T> select(CommandLanguage language, String command, Map<String,
-            Object> params, Class<T> entityType) {
+    public <T extends IdentifiableDocumentBase> Flux<T> select(CommandLanguage language, String command,
+            Map<String, Object> params, Class<T> entityType) {
         return select(language, command, params, entityType, this::convertMapToObject);
     }
 
-    public <T> Flux<T> select(CommandLanguage language, String command, Map<String,
-            Object> params, Class<T> entityType, BiFunction<Class<T>, Map<String, Object>, T> mapper) {
+    public <T> Flux<T> select(CommandLanguage language, String command, Map<String, Object> params, Class<T> entityType,
+            BiFunction<Class<T>, Map<String, Object>, T> mapper) {
         return new CommandExchange(language, command, getDatabaseName(), params, getWebClient())
                 .exchange()
                 .map(CommandResponse::result)
@@ -253,7 +254,7 @@ public class ArcadedbTemplate implements ArcadedbOperations, TransactionalOperat
     }
 
     public <E extends EdgeBase, F extends VertexBase, T extends VertexBase> Mono<E> createEdge(F from, T to,
-                                                                                               Class<E> edge) {
+            Class<E> edge) {
         Assert.notNull(from, "From vertex must not be empty");
         Assert.notNull(from.getRid(), "From vertex must have a non-empty @rid");
         Assert.notNull(to, "To vertex must not be empty");
@@ -267,16 +268,48 @@ public class ArcadedbTemplate implements ArcadedbOperations, TransactionalOperat
 
     public <F extends VertexBase> Flux<VertexBase> outVertices(F from) {
         return command(String.format("select out() from %s", getDocumentTypeNameForEntityType(from.getClass())))
-                .flatMap(result -> Flux.fromIterable((Iterable) result.get("out()")))
-                .map(item -> (VertexBase)convertMapToObject((Map) item));
+                .flatMap(result -> {
+                    var out = result.get("out()");
+                    if (out instanceof Iterable) {
+                        return Flux.fromIterable((Iterable) out);
+                    }
+                    return Flux.empty();
+                })
+                .map(item -> {
+                    if (item instanceof Map) {
+                        var convertedItem = convertMapToObject((Map<String, Object>) item);
+                        if (convertedItem instanceof VertexBase) {
+                            return (VertexBase) convertedItem;
+                        }
+                        return null;
+                    } else {
+                        return null;
+                    }
+                });
     }
 
     public <F extends VertexBase, E extends EdgeBase> Flux<VertexBase> outVertices(F from, Class<E> edgeType) {
         var edgeDocumentName = getDocumentTypeNameForEntityType(edgeType);
         return command(String.format("select out(%s) from %s", edgeDocumentName,
                 getDocumentTypeNameForEntityType(from.getClass())))
-                .flatMap(result -> Flux.fromIterable((Iterable) result.get(String.format("out(%s)", edgeDocumentName))))
-                .map(item -> (VertexBase) convertMapToObject((Map) item));
+                .flatMap(result -> {
+                    var out = result.get("out()");
+                    if (out instanceof Iterable) {
+                        return Flux.fromIterable((Iterable) out);
+                    }
+                    return Flux.empty();
+                })
+                .map(item -> {
+                    if (item instanceof Map) {
+                        var convertedItem = convertMapToObject((Map<String, Object>) item);
+                        if (convertedItem instanceof VertexBase) {
+                            return (VertexBase) convertedItem;
+                        }
+                        return null;
+                    } else {
+                        return null;
+                    }
+                });
     }
 
     public <F extends VertexBase> Flux<EdgeBase> outEdges(F from) {
@@ -319,7 +352,6 @@ public class ArcadedbTemplate implements ArcadedbOperations, TransactionalOperat
         return null;
     }
 
-
     public String convertObjectToJsonString(Object object) {
         var buffer = new StringBuffer();
         getEntityConverter().write(object, buffer);
@@ -348,19 +380,5 @@ public class ArcadedbTemplate implements ArcadedbOperations, TransactionalOperat
         return ((ArcadeclientMappingContext) getEntityConverter().getMappingContext())
                 .getPersistentEntityForDocumentType(documentTypeName)
                 .getType();
-    }
-
-    /* TransactionalOperations */
-
-    public Mono<EmptyResponse> commit() {
-        return new CommitTAExchange(getDatabaseName(), getWebClient()).exchange();
-    }
-
-    public Mono<EmptyResponse> rollback() {
-        return new RollbackTAExchange(getDatabaseName(), getWebClient()).exchange();
-    }
-
-    public void close() throws Exception {
-        commit().onErrorResume(ex -> rollback());
     }
 }

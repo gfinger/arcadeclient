@@ -1,0 +1,80 @@
+# @name exists
+GET http://{{host}}:{{port}}/{{api}}/exists/{{db}}
+Authorization: Basic {{user}} {{password}}
+
+HTTP/1.1 200  - OK
+connection: close
+content-type: application/json
+content-length: 144
+date: Wed, 19 Apr 2023 17:04:41 GMT
+###
+POST http://{{host}}:{{port}}/{{api}}/server
+Authorization: Basic {{user}} {{password}}
+Content-Type: application/json
+
+{
+   "command": "create database {{db}}" 
+}
+
+HTTP/1.1 400  - Bad Request
+connection: close
+content-type: application/json
+content-length: 137
+date: Thu, 20 Apr 2023 14:48:59 GMT
+###
+POST http://{{host}}:{{port}}/{{api}}/command/{{db}}
+Authorization: Basic {{user}} {{password}}
+Content-Type: application/json
+
+{
+    "language" : "sqlscript",
+    "command": "create document type Address if not exists;\
+                create property Address.city if not exists string;\
+                create vertex type Customer if not exists;\
+                create property Customer.name if not exists string;\
+                create property Customer.address if not exists embedded;\
+                create vertex type Person if not exists;\
+                create property Person.name if not exists string;\
+                create edge type IsContactOf if not exists;"
+}
+
+HTTP/1.1 200  - OK
+connection: close
+content-type: application/json
+content-length: 142
+date: Thu, 20 Apr 2023 15:11:15 GMT
+###
+POST http://{{host}}:{{port}}/{{api}}/command/{{db}}
+Authorization: Basic {{user}} {{password}}
+Content-Type: application/json
+
+{
+    "language": "sqlscript",
+    "command": "delete from Customer;delete from Person;\
+                create vertex Customer content {\"name\": \"Happy Garden\", \"address\": {\"street\": \"Flower Road\", \"@type\": \"Address\"}};\
+                create vertex Person content {\"name\": \"Clint\"};\
+                create vertex Person content {\"name\": \"Robert\"};\
+                create edge IsContactOf from (Select from Person where name = 'Clint') to (Select from Customer where name = 'Happy Garden');\
+                create edge IsContactOf from (Select from Person where name = 'Robert') to (Select from Customer where name = 'Happy Garden')"
+}
+
+HTTP/1.1 200  - OK
+connection: close
+content-type: application/json
+content-length: 220
+date: Thu, 20 Apr 2023 15:24:10 GMT
+###
+POST http://{{host}}:{{port}}/{{api}}/command/{{db}}
+Authorization: Basic {{user}} {{password}}
+Content-Type: application/json
+
+{
+    "language": "sqlscript",
+    "command": "select out() from Person"
+}
+
+HTTP/1.1 200  - OK
+connection: close
+content-type: application/json
+content-length: 431
+date: Fri, 21 Apr 2023 07:43:19 GMT
