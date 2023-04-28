@@ -1,9 +1,10 @@
 package org.makkiato.arcadeclient.data.operations;
 
-import reactor.core.publisher.Mono;
-
 import java.time.Duration;
 import java.util.Map;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public interface BasicOperations extends GenericOperations {
 
@@ -21,4 +22,12 @@ public interface BasicOperations extends GenericOperations {
     Mono<Void> deleteAll(String documentTypeName);
 
     Mono<Boolean> exists(String rid);
+
+    Flux<String> outVertexIds(String fromDocumentTypeName);
+    
+    Flux<String> outVertexIds(String fromDocumentTypeName, String edgeDocumentName);
+
+    Flux<String> outEdgesIds(String fromDocumentTypeName);
+
+    Flux<String> outEdgesIds(String fromDocumentTypeName, String edgeDocumentName);
 }

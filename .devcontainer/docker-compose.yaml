@@ -1,6 +1,7 @@
 version: '3.8'
 services:
   devcontainer:
+    env_file: devcontainer.env
     image: maven:3.9.1
     volumes:
       - ../..:/workspaces:cached

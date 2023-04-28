@@ -70,7 +70,7 @@ public abstract class ArcadeclientConfigurationSupport {
 
     @Bean
     public WebClientFactory webClientFactory(ArcadedbErrorResponseFilter arcadedbErrorResponseFilter,
-            WebClientSupplierStrategy webClientSupplierStrategy) {
+                                              WebClientSupplierStrategy webClientSupplierStrategy) {
         return new WebClientFactory(arcadedbErrorResponseFilter, webClientSupplierStrategy);
     }
 
@@ -98,7 +98,7 @@ public abstract class ArcadeclientConfigurationSupport {
 
     @Bean
     public ArcadedbOperations arcadedbOperations(ArcadedbProperties properties, WebClientFactory webClientFactory,
-            ArcadeclientMappingContext arcadeclientMappingContext, ExchangeFactory exchangeFactory) {
+                                                  ArcadeclientMappingContext arcadeclientMappingContext, ExchangeFactory exchangeFactory) {
         var connectionProperties = properties.getConnectionPropertiesFor(null);
         return new ArcadedbTemplate(connectionProperties.getDatabase(),
                 webClientFactory.getWebClientSupplierFor(connectionProperties).get(),
