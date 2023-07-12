@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map;
 
 import org.assertj.core.api.Condition;
@@ -27,7 +28,6 @@ import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilterImpl;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
@@ -35,6 +35,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 @SpringJUnitConfig(TestConfiguration.class)
@@ -332,15 +333,17 @@ public class ArcadedbTemplateIT {
     @Order(19)
     void transactional() throws Exception {
         try (var taConnection = template.transactional()) {
-            StepVerifier.create(taConnection.command("drop type Customer unsafe")
-                    .concatWith(taConnection.command("create vertex type Customer")
-                            .concatWith(taConnection.command("insert into Customer set name = 'Tester'"))
-                            .log()))
-                    .expectNextMatches(result -> result.get("operation").equals("drop type")
-                            && result.get("typeName").equals("Customer"))
-                    .expectNextMatches(result -> result.get("operation").equals("create vertex type")
-                            && result.get("typeName").equals("Customer"))
-                    .expectNextMatches(result -> result.get("name").equals("Tester"))
+            StepVerifier
+                    .create(taConnection.command("create vertex type Customer if not exists")
+                            .concatWith(taConnection.command("drop type Customer unsafe"))
+                            .concatWith(taConnection.command("create vertex type Customer"))
+                            .concatWith(taConnection.command("insert into Customer set name = 'Tester'")))
+                    .expectNextMatches(result -> result.entrySet().contains(entry("operation", "create vertex type")))
+                    .expectNextMatches(result -> result.entrySet().contains(entry("operation", "drop type")))
+                    .expectNextMatches(result -> result.entrySet().contains(entry("operation", "create vertex type"))
+                            && result.entrySet().contains(entry("typeName", "Customer")))
+                    .expectNextMatches(result -> result.entrySet().contains(entry("name", "Tester"))
+                            && result.entrySet().contains(entry("@type", "Customer")))
                     .verifyComplete();
         }
     }

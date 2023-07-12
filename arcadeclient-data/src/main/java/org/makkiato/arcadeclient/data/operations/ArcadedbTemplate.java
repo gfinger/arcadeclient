@@ -22,8 +22,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.util.Assert;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -31,7 +29,6 @@ public class ArcadedbTemplate implements ArcadedbOperations {
     private final String databaseName;
     private final WebClient webClient;
     private final ArcadeclientEntityConverter entityConverter;
-    private final ObjectMapper objectMapper;
     private final ExchangeFactory exchangeFactory;
 
     public ArcadedbTemplate(String databaseName, WebClient webClient, ArcadeclientEntityConverter entityConverter,
@@ -39,7 +36,6 @@ public class ArcadedbTemplate implements ArcadedbOperations {
         this.databaseName = databaseName;
         this.webClient = webClient;
         this.entityConverter = entityConverter;
-        this.objectMapper = new ObjectMapper();
         this.exchangeFactory = exchangeFactory;
     }
 
@@ -106,7 +102,7 @@ public class ArcadedbTemplate implements ArcadedbOperations {
     public Mono<Boolean> script(String[] commands, Map<String, Object> params) {
         var command = Arrays.stream(commands).map(c -> String.format("%s", c)).collect(Collectors.joining(";"));
         return exchangeFactory
-                .createCommandExchange(CommandLanguage.SQL, command, getDatabaseName(), params, getWebClient())
+                .createCommandExchange(CommandLanguage.SQLSCRIPT, command, getDatabaseName(), params, getWebClient())
                 .exchange()
                 .hasElement();
     }
@@ -191,7 +187,7 @@ public class ArcadedbTemplate implements ArcadedbOperations {
                 .getDocumentType();
         return command(String.format("insert into %s content %s", documentTypeName, convertObjectToJsonString(entity)))
                 .elementAt(0)
-                .map(item -> convertMapToObject((Class<T>) entity.getClass(), item));
+                .map(item -> (T) convertMapToObject(entity.getClass(), item));
     }
 
     @Override
@@ -207,7 +203,7 @@ public class ArcadedbTemplate implements ArcadedbOperations {
         return command(String.format("update %s content %s return after", entity.getRid(),
                 convertObjectToJsonString(entity)))
                 .elementAt(0)
-                .map(result -> convertMapToObject((Class<T>) entity.getClass(), result));
+                .map(result -> (T) convertMapToObject(entity.getClass(), result));
     }
 
     /**
@@ -228,7 +224,7 @@ public class ArcadedbTemplate implements ArcadedbOperations {
             return command(String.format("update %s merge %s upsert return after", entity.getRid(),
                     convertObjectToJsonString(entity)))
                     .elementAt(0)
-                    .map(result -> convertMapToObject((Class<T>) entity.getClass(), result));
+                    .map(result -> (T) convertMapToObject(entity.getClass(), result));
         } else {
             return insertDocument(entity);
         }
@@ -412,9 +408,9 @@ public class ArcadedbTemplate implements ArcadedbOperations {
 
     @Override
     public <T extends DocumentBase> T convertMapToObject(Map<String, Object> item) {
-        var documentTypeName = (String) ((Map) item).get("@type");
-        var clazz = (Class<T>) getEntityTypeForDocumentTypeName(documentTypeName);
-        return (T) convertMapToObject(clazz, (Map) item);
+        var documentTypeName = (String) (item).get("@type");
+        var clazz = getEntityTypeForDocumentTypeName(documentTypeName);
+        return (T) convertMapToObject(clazz, item);
     }
 
     @Override
@@ -439,12 +435,12 @@ public class ArcadedbTemplate implements ArcadedbOperations {
         return flux.flatMap(result -> {
             var out = result.get("item");
             if (out instanceof Iterable) {
-                return Flux.fromIterable((Iterable) out);
+                return Flux.fromIterable((Iterable<?>) out);
             }
             return Flux.empty();
         })
                 .map(item -> {
-                    if (item instanceof Map) {
+                    if (item instanceof Map<?,?>) {
                         var convertedItem = convertMapToObject((Map<String, Object>) item);
                         if (convertedItem instanceof VertexBase) {
                             return (VertexBase) convertedItem;
@@ -461,7 +457,7 @@ public class ArcadedbTemplate implements ArcadedbOperations {
     return flux.flatMap(result -> {
         var out = result.get("item");
         if (out instanceof Iterable) {
-            return Flux.fromIterable((Iterable) out);
+            return Flux.fromIterable((Iterable<?>) out);
         }
         return Flux.empty();
     })
@@ -480,8 +476,8 @@ public class ArcadedbTemplate implements ArcadedbOperations {
 
     private Flux<String> convertFluxOfMapToFluxOfRid(Flux<Map<String, Object>> flux) {
         return flux.map(item -> {
-            if (item instanceof Map) {
-                return (String) ((Map) item).get("item");
+            if (item instanceof Map<?,?>) {
+                return (String) item.get("item");
             }
             return null;
         });
