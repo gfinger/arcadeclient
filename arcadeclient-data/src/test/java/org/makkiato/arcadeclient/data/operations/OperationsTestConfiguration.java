@@ -1,60 +1,25 @@
 package org.makkiato.arcadeclient.data.operations;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
-import org.makkiato.arcadeclient.data.base.Document;
-import org.makkiato.arcadeclient.data.config.ArcadeclientConfigurationSupport;
 import org.makkiato.arcadeclient.data.config.ArcadeclientManagedTypes;
-import org.makkiato.arcadeclient.data.core.ArcadedbProperties;
-import org.makkiato.arcadeclient.data.core.WebClientFactory;
 import org.makkiato.arcadeclient.data.mapping.ArcadeclientMappingContext;
 import org.makkiato.arcadeclient.data.mapping.MappingArcadeclientConverter;
 import org.makkiato.arcadeclient.data.web.request.ExchangeFactory;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
-import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.util.ClassUtils;
-import org.springframework.util.StringUtils;
+import org.springframework.context.annotation.Configuration;
 
-@ConfigurationPropertiesScan(basePackageClasses = ArcadedbProperties.class)
+@Configuration
 public class OperationsTestConfiguration {
-    protected Collection<String> getMappingBasePackages() {
-        Package mappingBasePackage = getClass().getPackage();
-        return Collections.singleton(mappingBasePackage == null ? null : mappingBasePackage.getName());
-    }
-
     protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
-        var initialEntitySet = new HashSet<Class<?>>();
-        for (String basePackage : getMappingBasePackages()) {
-            initialEntitySet.addAll(scanForEntities(basePackage));
-        }
-        return initialEntitySet;
+        var entitySet = new HashSet<Class<?>>(4);
+        Stream.of(Customer.class, Person.class, Address.class, IsContactOf.class)
+                .forEach(entity -> entitySet.add(entity));
+        return entitySet;
     }
 
-    protected Set<Class<?>> scanForEntities(String basePackage) throws ClassNotFoundException {
-        if (!StringUtils.hasText(basePackage)) {
-            return Collections.emptySet();
-        }
-
-        var initialEntitySet = new HashSet<Class<?>>();
-        ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(
-                false);
-        componentProvider.addIncludeFilter(new AnnotationTypeFilter(Document.class));
-
-        for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
-
-            initialEntitySet
-                    .add(ClassUtils.forName(candidate.getBeanClassName(),
-                            ArcadeclientConfigurationSupport.class.getClassLoader()));
-        }
-        return initialEntitySet;
-    }
-    
     @Bean
     public ArcadeclientMappingContext arcadeclientMappingContext(ArcadeclientManagedTypes managedTypes) {
         var mappingContext = new ArcadeclientMappingContext();
@@ -68,8 +33,9 @@ public class OperationsTestConfiguration {
     }
 
     @Bean
-    public ArcadedbOperations arcadedbOperations(ArcadeclientMappingContext arcadeclientMappingContext, ExchangeFactory exchangeFactory) {
-        return new ArcadedbTemplate(null,null,
+    public ArcadedbOperations arcadedbOperations(ArcadeclientMappingContext arcadeclientMappingContext,
+            ExchangeFactory exchangeFactory) {
+        return new ArcadedbTemplate(null, null,
                 new MappingArcadeclientConverter(arcadeclientMappingContext) {
                 },
                 exchangeFactory);

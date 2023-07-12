@@ -11,7 +11,13 @@
                 "vscjava.vscode-java-pack",
                 "redhat.vscode-xml",
                 "redhat.fabric8-analytics",
-                "vmware.vscode-boot-dev-pack"
+                "vmware.vscode-boot-dev-pack",
+                "anweber.vscode-httpyac",
+                "anweber.httpbook",
+                "asciidoctor.asciidoctor-vscode",
+                "github.vscode-github-actions",
+                "github.vscode-pull-request-github",
+                "redhat.vscode-yaml"
             ]
         }
     }

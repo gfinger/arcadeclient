@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.0.6</version>
+        <version>3.1.1</version>
         <relativePath /> <!-- lookup parent from repository -->
     </parent>
     <groupId>org.makkiato.arcadeclient</groupId>
@@ -15,7 +15,7 @@
     <name>Arcadeclient Console</name>
     <description>Console using Spring Boot client for ArcadeDB</description>
     <properties>
-        <java.version>19</java.version>
+        <java.version>20</java.version>
         <spring-shell.version>3.0.0</spring-shell.version>
     </properties>
     <dependencies>
@@ -78,14 +78,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <release>20</release>
-                    <compilerArgs>--enable-preview</compilerArgs>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

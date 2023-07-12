@@ -81,7 +81,7 @@ public class MappingArcadeclientConverter implements ArcadeclientEntityConverter
 
     private static class ArcadeclientPropertyNamingStrategy extends PropertyNamingStrategy {
         @Override
-        public String nameForGetterMethod(MapperConfig config, AnnotatedMethod method, String defaultName) {
+        public String nameForGetterMethod(MapperConfig<?> config, AnnotatedMethod method, String defaultName) {
             if (method.hasAnnotation(Rid.class)) {
                 return method.getAnnotation(Rid.class).value();
             }
@@ -95,7 +95,7 @@ public class MappingArcadeclientConverter implements ArcadeclientEntityConverter
         }
 
         @Override
-        public String nameForSetterMethod(MapperConfig config, AnnotatedMethod method, String defaultName) {
+        public String nameForSetterMethod(MapperConfig<?> config, AnnotatedMethod method, String defaultName) {
             return nameForGetterMethod(config, method, defaultName);
         }
     }

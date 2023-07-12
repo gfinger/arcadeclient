@@ -2,49 +2,110 @@ package org.makkiato.arcadeclient.data.operations;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.makkiato.arcadeclient.data.core.ArcadedbFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @SpringJUnitConfig(TestConfiguration.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@SpringBootTest(properties = {
+        "org.makkiato.arcadedb.connection.database=test-edge-operations"
+})
 public class EdgeOperationsIT {
     @Autowired
     private ArcadedbFactory arcadedbFactory;
     @Autowired
-    private ArcadedbTemplate template;
+    private ArcadedbOperations operations;
 
     @BeforeAll
     void init() {
-        arcadedbFactory.create().block();
-        template.command("create vertex type Kunde").blockFirst();
-        template.command("create vertex type Person").blockFirst();
-        template.command("create edge type IsContactOf if not exists").blockFirst();
-        var customerRid = (String) template.command("insert into Kunde set name = 'Flower Power'").blockFirst().get(
-                "@rid");
-        var personRid = (String) template.command("insert into Person set name = 'Clint'").blockFirst().get("@rid");
-        template.findById(personRid, Person.class).zipWith(template.findById(customerRid, Customer.class))
-                .flatMap(tuple -> template.createEdge(tuple.getT1(), tuple.getT2(), IsContactOf.class)).block();
+        Flux.concat(
+                arcadedbFactory.exists().flatMap(exists -> {
+                    if (exists) {
+                        return arcadedbFactory.drop();
+                    }
+                    return Mono.just(true);
+                }).flatMap(ok -> {
+                    if (ok) {
+                        return arcadedbFactory.create();
+                    }
+                    return Mono.just(false);
+                }),
+                Flux.merge(
+                        operations.command("create vertex type Kunde"),
+                        operations.command("create vertex type Person"),
+                        operations.command("create document type Address"),
+                        operations.command("create edge type IsContactOf")),
+                Flux.zip(
+                        operations.command("""
+                                create vertex Kunde content
+                                    {
+                                        "name": "Happy Garden",
+                                        "address": {
+                                            "street": "Flower Road",
+                                            "@type": "Address"
+                                        }
+                                    }
+                                """)
+                                .map(customer -> customer.get("@rid")).cast(String.class),
+                        operations.command("insert into Person set name = 'Clint'")
+                                .map(person -> person.get("@rid")).cast(String.class),
+                        operations.command("insert into Person set name = 'Robert'")
+                                .map(person -> person.get("@rid")).cast(String.class))
+                        .flatMap(tuple -> {
+                            return Flux.concat(
+                                    operations.command(String.format("create edge IsContactOf from %s to %s",
+                                            tuple.getT2(), tuple.getT1())),
+                                    operations.command(String.format("create edge IsContactOf from %s to %s",
+                                            tuple.getT3(), tuple.getT1())));
+                        }))
+                .blockLast();
     }
 
-    @Test
-    void outVertices() {
-        StepVerifier.create(template.findAll(Person.class).flatMap(person -> template.outVertices(person)).collectList())
-                .expectNextMatches(customers -> customers.stream()
-                        .allMatch(customer -> customer.getRid() != null && customer.getType().equals("Kunde") && customer instanceof Customer))
-                .verifyComplete();
+    @Nested
+    class VertexTests {
+        @Test
+        void outVertices() {
+            StepVerifier
+                    .create(operations.findAll(Person.class)
+                            .flatMap(person -> operations.outVertices(person)).collectList())
+                    .expectNextMatches(customers -> customers.stream()
+                            .allMatch(customer -> customer.getRid() != null && customer.getType().equals("Kunde")
+                                    && customer instanceof Customer
+                                    && ((Customer) customer).getName().equals("Happy Garden")))
+                    .verifyComplete();
+        }
+
+        @Test
+        void outVerticesWithEdgeType() {
+            StepVerifier
+                    .create(operations.findAll(Person.class)
+                            .flatMap(person -> operations.outVertices(person, IsContactOf.class)).collectList())
+                    .expectNextMatches(customers -> customers.stream()
+                            .allMatch(customer -> customer.getRid() != null && customer.getType().equals("Kunde")
+                                    && customer instanceof Customer
+                                    && ((Customer) customer).getName().equals("Happy Garden")))
+                    .verifyComplete();
+        }
     }
 
-    @Test
-    void outVerticesWithEdgeType() {
-        StepVerifier.create(template.findAll(Person.class).flatMap(person -> template.outVertices(person, IsContactOf.class)).collectList())
-                .expectNextMatches(customers -> customers.stream()
-                        .allMatch(customer -> customer.getRid() != null && customer.getType().equals("Kunde") && customer instanceof Customer))
-                .verifyComplete();
+    @Nested
+    class IdTests {
+        @Test
+        void outVertexIds() {
+            StepVerifier.create(operations.outVertexIds("Person").collectList())
+                    .expectNextMatches(ids -> ids.stream()
+                            .allMatch(id -> id != null))
+                    .verifyComplete();
+        }
     }
 
     @AfterAll

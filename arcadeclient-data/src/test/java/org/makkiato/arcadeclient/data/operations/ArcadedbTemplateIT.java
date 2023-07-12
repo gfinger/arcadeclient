@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map;
 
 import org.assertj.core.api.Condition;
@@ -34,6 +35,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 @SpringJUnitConfig(TestConfiguration.class)
@@ -104,7 +106,7 @@ public class ArcadedbTemplateIT {
     void createProperty() {
         assertThat(template.command("create property Customer.name String (mandatory true, notnull true)")
                 .blockFirst()).contains(entry("operation",
-                "create property"), entry("typeName", "Customer"));
+                        "create property"), entry("typeName", "Customer"));
         assertThatThrownBy(() -> template
                 .command("create property Customer.name String (mandatory true, notnull " +
                         "true)")
@@ -121,8 +123,8 @@ public class ArcadedbTemplateIT {
     @Order(4)
     void createIndex() {
         assertThat(template.command("create index on Customer (name) unique").blockFirst()).contains(entry(
-                        "operation",
-                        "create index"), entry("name", "Customer[name]"), entry("type", "LSM_TREE"),
+                "operation",
+                "create index"), entry("name", "Customer[name]"), entry("type", "LSM_TREE"),
                 entry("totalIndexed", 0));
     }
 
@@ -185,7 +187,7 @@ public class ArcadedbTemplateIT {
                 .matches(cu -> cu.get("@cat") != null && cu.get("@rid") != null
                         && cu.get("@type").equals("Kunde"), "no valid vertex")
                 .matches(cu -> cu.get("address") != null
-                        && ((Map)cu.get("address")).get("street").equals("Städelstraße"));
+                        && ((Map) cu.get("address")).get("street").equals("Städelstraße"));
 
         var customer2 = new Customer();
         customer2.setAddress(address);
@@ -296,7 +298,7 @@ public class ArcadedbTemplateIT {
     @Test
     @Order(17)
     void script() {
-        var script = new String[]{
+        var script = new String[] {
                 "create vertex type Customer",
                 "create property Customer.name String (mandatory true, notnull true)",
                 "create index on Customer (name) unique",
@@ -331,15 +333,17 @@ public class ArcadedbTemplateIT {
     @Order(19)
     void transactional() throws Exception {
         try (var taConnection = template.transactional()) {
-            StepVerifier.create(taConnection.command("drop type Customer unsafe")
-                            .concatWith(taConnection.command("create vertex type Customer")
-                                    .concatWith(taConnection.command("insert into Customer set name = 'Tester'"))
-                                    .log()))
-                    .expectNextMatches(result -> result.get("operation").equals("drop type")
-                            && result.get("typeName").equals("Customer"))
-                    .expectNextMatches(result -> result.get("operation").equals("create vertex type")
-                            && result.get("typeName").equals("Customer"))
-                    .expectNextMatches(result -> result.get("name").equals("Tester"))
+            StepVerifier
+                    .create(taConnection.command("create vertex type Contact if not exists")
+                            .concatWith(taConnection.command("drop type Contact unsafe"))
+                            .concatWith(taConnection.command("create vertex type Contact"))
+                            .concatWith(taConnection.command("insert into Contact set name = 'Tester'")))
+                    .expectNextMatches(result -> result.entrySet().contains(entry("operation", "create vertex type")))
+                    .expectNextMatches(result -> result.entrySet().contains(entry("operation", "drop type")))
+                    .expectNextMatches(result -> result.entrySet().contains(entry("operation", "create vertex type"))
+                            && result.entrySet().contains(entry("typeName", "Contact")))
+                    .expectNextMatches(result -> result.entrySet().contains(entry("name", "Tester"))
+                            && result.entrySet().contains(entry("@type", "Contact")))
                     .verifyComplete();
         }
     }
