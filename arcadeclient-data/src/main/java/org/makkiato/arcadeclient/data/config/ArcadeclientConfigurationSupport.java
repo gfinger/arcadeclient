@@ -6,11 +6,13 @@ import org.makkiato.arcadeclient.data.core.ArcadedbProperties;
 import org.makkiato.arcadeclient.data.core.WebClientFactory;
 import org.makkiato.arcadeclient.data.mapping.ArcadeclientMappingContext;
 import org.makkiato.arcadeclient.data.mapping.MappingArcadeclientConverter;
+import org.makkiato.arcadeclient.data.operations.ArcadedbOperations;
 import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
 import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilter;
 import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilterImpl;
 import org.makkiato.arcadeclient.data.web.client.HALeaderWebClientSupplierStrategy;
 import org.makkiato.arcadeclient.data.web.client.WebClientSupplierStrategy;
+import org.makkiato.arcadeclient.data.web.request.ExchangeFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
@@ -68,7 +70,7 @@ public abstract class ArcadeclientConfigurationSupport {
 
     @Bean
     public WebClientFactory webClientFactory(ArcadedbErrorResponseFilter arcadedbErrorResponseFilter,
-                                             WebClientSupplierStrategy webClientSupplierStrategy) {
+                                              WebClientSupplierStrategy webClientSupplierStrategy) {
         return new WebClientFactory(arcadedbErrorResponseFilter, webClientSupplierStrategy);
     }
 
@@ -90,12 +92,18 @@ public abstract class ArcadeclientConfigurationSupport {
     }
 
     @Bean
-    public ArcadedbTemplate arcadedbTemplate(ArcadedbProperties properties, WebClientFactory webClientFactory,
-                                             ArcadeclientMappingContext arcadeclientMappingContext) {
+    public ExchangeFactory exchangeFactory() {
+        return new ExchangeFactory();
+    }
+
+    @Bean
+    public ArcadedbOperations arcadedbOperations(ArcadedbProperties properties, WebClientFactory webClientFactory,
+                                                  ArcadeclientMappingContext arcadeclientMappingContext, ExchangeFactory exchangeFactory) {
         var connectionProperties = properties.getConnectionPropertiesFor(null);
         return new ArcadedbTemplate(connectionProperties.getDatabase(),
                 webClientFactory.getWebClientSupplierFor(connectionProperties).get(),
                 new MappingArcadeclientConverter(arcadeclientMappingContext) {
-        });
+                },
+                exchangeFactory);
     }
 }

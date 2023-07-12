@@ -72,7 +72,7 @@ public interface ConversionAwareOperations extends GenericOperations {
 
     <F extends VertexBase> Flux<EdgeBase> outEdges(F from);
 
-    <F extends VertexBase, E extends EdgeBase> Flux<E> outEdges(F from, Class<E> edgeType);
+    <F extends VertexBase, E extends EdgeBase> Flux<EdgeBase> outEdges(F from, Class<E> edgeType);
 
     <T extends VertexBase> Flux<VertexBase> inVertices(T to);
 
@@ -80,7 +80,7 @@ public interface ConversionAwareOperations extends GenericOperations {
 
     <T extends VertexBase> Flux<EdgeBase> inEdges(T to);
 
-    <T extends VertexBase, E extends EdgeBase> Flux<E> inEdges(T to, Class<E> edgeType);
+    <T extends VertexBase, E extends EdgeBase> Flux<EdgeBase> inEdges(T to, Class<E> edgeType);
 
     <V extends VertexBase> Flux<VertexBase> bothVertices(V vertex);
 
@@ -88,7 +88,7 @@ public interface ConversionAwareOperations extends GenericOperations {
 
     <V extends VertexBase> Flux<EdgeBase> bothEdges(V vertex);
 
-    <V extends VertexBase, E extends EdgeBase> Flux<E> bothEdges(V vertex, Class<E> edgeType);
+    <V extends VertexBase, E extends EdgeBase> Flux<EdgeBase> bothEdges(V vertex, Class<E> edgeType);
 
 
     String convertObjectToJsonString(Object object);

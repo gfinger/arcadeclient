@@ -1,18 +1,14 @@
 version: '3.8'
 services:
   devcontainer:
-    build:
-      context: .
-      dockerfile: Client-Dockerfile
+    env_file: devcontainer.env
+    image: maven:3.9.1
     volumes:
       - ../..:/workspaces:cached
     network_mode: service:db
     command: sleep infinity
 
   db:
-    build: 
-      context: .
-      dockerfile: Arcadedb-Dockerfile
+    image: gfinger/arcadedb:23.3.1
     restart: unless-stopped
-    environment:
-      JAVA_OPTS: -Darcadedb.server.rootPassword=playwithdata -Darcadedb.ha.enabled=true -Darcadedb.server.plugins=Redis:com.arcadedb.redis.RedisProtocolPlugin,MongoDB:com.arcadedb.mongo.MongoDBProtocolPlugin,Postgres:com.arcadedb.postgres.PostgresProtocolPlugin,GremlinServer:com.arcadedb.server.gremlin.GremlinServerPlugin
+    

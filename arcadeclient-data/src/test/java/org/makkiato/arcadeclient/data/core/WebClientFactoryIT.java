@@ -7,18 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.makkiato.arcadeclient.data.exception.client.ArcadeClientException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 @SpringJUnitConfig(TestConfiguration.class)
-@TestPropertySource(properties = {
-    "org.makkiato.arcadedb.connections.default.host=localhost",
-    "org.makkiato.arcadedb.connections.default.port=2480",
-    "org.makkiato.arcadedb.connections.default.username=root",
-    "org.makkiato.arcadedb.connections.default.password=playwithdata",
-    "org.makkiato.arcadedb.connections.default.leader-preferred=true",
-    "org.makkiato.arcadedb.connections.default.database=xyz-webclientfactory-test"
-})
 class WebClientFactoryIT {
     @Autowired
     private WebClientFactory arcadedbClient;

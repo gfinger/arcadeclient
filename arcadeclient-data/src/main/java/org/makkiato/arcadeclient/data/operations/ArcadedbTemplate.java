@@ -1,20 +1,5 @@
 package org.makkiato.arcadeclient.data.operations;
 
-import org.makkiato.arcadeclient.data.base.DocumentBase;
-import org.makkiato.arcadeclient.data.base.EdgeBase;
-import org.makkiato.arcadeclient.data.base.IdentifiableDocumentBase;
-import org.makkiato.arcadeclient.data.base.VertexBase;
-import org.makkiato.arcadeclient.data.mapping.ArcadeclientEntityConverter;
-import org.makkiato.arcadeclient.data.mapping.ArcadeclientMappingContext;
-import org.makkiato.arcadeclient.data.web.request.*;
-import org.makkiato.arcadeclient.data.web.response.CommandResponse;
-import org.makkiato.arcadeclient.data.web.response.EmptyResponse;
-import org.springframework.core.io.Resource;
-import org.springframework.util.Assert;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -23,15 +8,35 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class ArcadedbTemplate implements GenericOperations, BasicOperations, ConversionAwareOperations, TransactionalOperations {
+import org.makkiato.arcadeclient.data.base.DocumentBase;
+import org.makkiato.arcadeclient.data.base.EdgeBase;
+import org.makkiato.arcadeclient.data.base.IdentifiableDocumentBase;
+import org.makkiato.arcadeclient.data.base.VertexBase;
+import org.makkiato.arcadeclient.data.mapping.ArcadeclientEntityConverter;
+import org.makkiato.arcadeclient.data.mapping.ArcadeclientMappingContext;
+import org.makkiato.arcadeclient.data.web.request.BeginTAExchange;
+import org.makkiato.arcadeclient.data.web.request.ExchangeFactory;
+import org.makkiato.arcadeclient.data.web.response.CommandResponse;
+import org.makkiato.arcadeclient.data.web.response.EmptyResponse;
+import org.springframework.core.io.Resource;
+import org.springframework.util.Assert;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+public class ArcadedbTemplate implements ArcadedbOperations {
     private final String databaseName;
     private final WebClient webClient;
     private final ArcadeclientEntityConverter entityConverter;
+    private final ExchangeFactory exchangeFactory;
 
-    public ArcadedbTemplate(String databaseName, WebClient webClient, ArcadeclientEntityConverter entityConverter) {
+    public ArcadedbTemplate(String databaseName, WebClient webClient, ArcadeclientEntityConverter entityConverter,
+            ExchangeFactory exchangeFactory) {
         this.databaseName = databaseName;
         this.webClient = webClient;
         this.entityConverter = entityConverter;
+        this.exchangeFactory = exchangeFactory;
     }
 
     @Override
@@ -49,7 +54,7 @@ public class ArcadedbTemplate implements GenericOperations, BasicOperations, Con
         return webClient;
     }
 
-
+    @Override
     public TransactionalOperations transactional() {
         return new BeginTAExchange(getDatabaseName(), getWebClient()).exchange()
                 .map(EmptyResponse::headers)
@@ -57,17 +62,20 @@ public class ArcadedbTemplate implements GenericOperations, BasicOperations, Con
                 .map(header -> header.get(ARCADEDB_SESSION_ID))
                 .filter(item -> !item.isEmpty())
                 .map(item -> item.get(0))
-                .map(id -> new ArcadedbTemplate(getDatabaseName(),
-                        getWebClient().mutate().defaultHeader(ARCADEDB_SESSION_ID, id).build(), entityConverter))
+                .map(id -> new TransactionalTemplate(getDatabaseName(),
+                        getWebClient().mutate().defaultHeader(ARCADEDB_SESSION_ID, id).build(), entityConverter,
+                        exchangeFactory))
                 .block(CONNECTION_TIMEOUT);
     }
 
     /* GenericOperations */
 
+    @Override
     public Mono<Boolean> script(Resource resource) throws IOException {
         return script(resource, null);
     }
 
+    @Override
     public Mono<Boolean> script(Resource resource, Map<String, Object> params)
             throws IOException {
         var commands = Arrays.stream(resource.getContentAsString(Charset.defaultCharset()).split(";"))
@@ -76,55 +84,64 @@ public class ArcadedbTemplate implements GenericOperations, BasicOperations, Con
         return script(commands, params);
     }
 
+    @Override
     public Mono<Boolean> script(CommandLanguage language, Resource resource, Map<String, Object> params)
             throws IOException {
         var command = resource.getContentAsString(Charset.defaultCharset());
-        return new CommandExchange(language, command, getDatabaseName(), params, getWebClient())
+        return exchangeFactory.createCommandExchange(language, command, getDatabaseName(), params, getWebClient())
                 .exchange()
                 .hasElement();
     }
 
+    @Override
     public Mono<Boolean> script(String[] commands) {
         return script(commands, null);
     }
 
+    @Override
     public Mono<Boolean> script(String[] commands, Map<String, Object> params) {
         var command = Arrays.stream(commands).map(c -> String.format("%s", c)).collect(Collectors.joining(";"));
-        return new CommandExchange(CommandLanguage.SQLSCRIPT, command, getDatabaseName(), params, getWebClient())
+        return exchangeFactory
+                .createCommandExchange(CommandLanguage.SQLSCRIPT, command, getDatabaseName(), params, getWebClient())
                 .exchange()
                 .hasElement();
     }
 
+    @Override
     public Flux<Map<String, Object>> command(String command) {
         return command(CommandLanguage.SQL, command, null);
     }
 
+    @Override
     public Flux<Map<String, Object>> command(String command, Map<String, Object> params) {
         return command(CommandLanguage.SQL, command, params);
     }
 
+    @Override
     public Flux<Map<String, Object>> command(CommandLanguage language, String command, Map<String, Object> params) {
-        return new CommandExchange(language, command, getDatabaseName(), params, getWebClient())
+        return exchangeFactory.createCommandExchange(language, command, getDatabaseName(), params, getWebClient())
                 .exchange()
                 .map(CommandResponse::result)
                 .flatMapMany(Flux::fromArray);
     }
 
+    @Override
     public Flux<Map<String, Object>> query(String query) {
-        return new QueryExchange(CommandLanguage.SQL, query, getDatabaseName(), getWebClient())
+        return exchangeFactory.createQueryExchange(CommandLanguage.SQL, query, getDatabaseName(), getWebClient())
                 .exchange()
                 .map(CommandResponse::result)
                 .flatMapMany(Flux::fromArray);
     }
-
 
     /* BasicOperations */
 
+    @Override
     public Mono<Map<String, Object>> insert(String documentTypeName, String jsonObject) {
         return command(String.format("insert into %s content %s", documentTypeName, jsonObject))
                 .elementAt(0);
     }
 
+    @Override
     public Mono<Long> count(String documentTypeName) {
         Assert.notNull(documentTypeName, "Document name must not be empty");
         return command(String.format("select count() as c from %s", documentTypeName))
@@ -133,6 +150,7 @@ public class ArcadedbTemplate implements GenericOperations, BasicOperations, Con
                 .cast(Long.class);
     }
 
+    @Override
     public Mono<Void> deleteById(String id, String documentTypeName) {
         Assert.notNull(id, "RID of document must not be empty");
         Assert.notNull(documentTypeName, "Document name must not be empty");
@@ -140,6 +158,7 @@ public class ArcadedbTemplate implements GenericOperations, BasicOperations, Con
                 .elementAt(0).flatMap(r -> Mono.empty());
     }
 
+    @Override
     public Mono<Void> deleteAllById(Iterable<? extends String> ids, String documentTypeName) {
         Assert.notNull(ids, "RID of document must not be empty");
         Assert.notNull(documentTypeName, "Document name must not be empty");
@@ -148,39 +167,43 @@ public class ArcadedbTemplate implements GenericOperations, BasicOperations, Con
                 .elementAt(0).flatMap(r -> Mono.empty());
     }
 
+    @Override
     public Mono<Void> deleteAll(String documentTypeName) {
         Assert.notNull(documentTypeName, "Document name must not be empty");
         return command(String.format("delete from %s", documentTypeName))
                 .elementAt(0).map(result -> result.get("count")).log().then(Mono.empty());
     }
 
+    @Override
     public Mono<Boolean> exists(String rid) {
         return command(String.format("select from [%s]", rid)).hasElements();
     }
 
-
     /* ConversionAwareOperations */
 
+    @Override
     public <T extends IdentifiableDocumentBase> Mono<T> insertDocument(T entity) {
-        var documentTypeName =
-                getEntityConverter().getMappingContext().getRequiredPersistentEntity(entity.getClass()).getDocumentType();
+        var documentTypeName = getEntityConverter().getMappingContext().getRequiredPersistentEntity(entity.getClass())
+                .getDocumentType();
         return command(String.format("insert into %s content %s", documentTypeName, convertObjectToJsonString(entity)))
                 .elementAt(0)
-                .map(item -> convertMapToObject((Class<T>) entity.getClass(), item));
+                .map(item -> (T) convertMapToObject(entity.getClass(), item));
     }
 
+    @Override
     public <T extends IdentifiableDocumentBase> Mono<Map<String, Object>> update(String rid, T entity) {
         return command(String.format("update %s content %s return after", rid, convertObjectToJsonString(entity)))
                 .elementAt(0);
     }
 
+    @Override
     public <T extends IdentifiableDocumentBase> Mono<T> updateDocument(T entity) {
         Assert.notNull(entity, "Document must not be empty");
         Assert.notNull(entity.getRid(), "RID of document must not be empty");
         return command(String.format("update %s content %s return after", entity.getRid(),
                 convertObjectToJsonString(entity)))
                 .elementAt(0)
-                .map(result -> convertMapToObject((Class<T>) entity.getClass(), result));
+                .map(result -> (T) convertMapToObject(entity.getClass(), result));
     }
 
     /**
@@ -193,40 +216,47 @@ public class ArcadedbTemplate implements GenericOperations, BasicOperations, Con
      * @param <T>    Document type
      * @return the updated object
      */
+
+    @Override
     public <T extends IdentifiableDocumentBase> Mono<T> mergeDocument(T entity) {
         Assert.notNull(entity, "Document must not be empty");
         if (entity.getRid() != null) {
             return command(String.format("update %s merge %s upsert return after", entity.getRid(),
                     convertObjectToJsonString(entity)))
                     .elementAt(0)
-                    .map(result -> convertMapToObject((Class<T>) entity.getClass(), result));
+                    .map(result -> (T) convertMapToObject(entity.getClass(), result));
         } else {
             return insertDocument(entity);
         }
     }
 
+    @Override
     public <T extends IdentifiableDocumentBase> Flux<T> select(String command, Class<T> entityType) {
         return select(CommandLanguage.SQL, command, null, entityType, this::convertMapToObject);
     }
 
+    @Override
     public <T extends IdentifiableDocumentBase> Flux<T> select(String command, Map<String, Object> params,
-                                                               Class<T> entityType) {
+            Class<T> entityType) {
         return select(CommandLanguage.SQL, command, params, entityType, this::convertMapToObject);
     }
 
+    @Override
     public <T extends IdentifiableDocumentBase> Flux<T> select(CommandLanguage language, String command,
-                                                               Class<T> entityType) {
+            Class<T> entityType) {
         return select(language, command, null, entityType, this::convertMapToObject);
     }
 
-    public <T extends IdentifiableDocumentBase> Flux<T> select(CommandLanguage language, String command, Map<String,
-            Object> params, Class<T> entityType) {
+    @Override
+    public <T extends IdentifiableDocumentBase> Flux<T> select(CommandLanguage language, String command,
+            Map<String, Object> params, Class<T> entityType) {
         return select(language, command, params, entityType, this::convertMapToObject);
     }
 
-    public <T> Flux<T> select(CommandLanguage language, String command, Map<String,
-            Object> params, Class<T> entityType, BiFunction<Class<T>, Map<String, Object>, T> mapper) {
-        return new CommandExchange(language, command, getDatabaseName(), params, getWebClient())
+    @Override
+    public <T> Flux<T> select(CommandLanguage language, String command, Map<String, Object> params, Class<T> entityType,
+            BiFunction<Class<T>, Map<String, Object>, T> mapper) {
+        return exchangeFactory.createCommandExchange(language, command, getDatabaseName(), params, getWebClient())
                 .exchange()
                 .map(CommandResponse::result)
                 .map(resultArray -> Arrays.stream(resultArray)
@@ -236,6 +266,7 @@ public class ArcadedbTemplate implements GenericOperations, BasicOperations, Con
 
     }
 
+    @Override
     public <T extends IdentifiableDocumentBase> Mono<Void> deleteDocument(T entity) {
         Assert.notNull(entity, "Document must not be empty");
         Assert.notNull(entity.getRid(), "RID of document must not be empty");
@@ -244,16 +275,19 @@ public class ArcadedbTemplate implements GenericOperations, BasicOperations, Con
                 .elementAt(0).flatMap(r -> Mono.empty());
     }
 
+    @Override
     public <T extends IdentifiableDocumentBase> Mono<T> findById(String rid, Class<T> entityType) {
         return select(String.format("select from [%s]", rid), entityType).elementAt(0);
     }
 
+    @Override
     public <T extends IdentifiableDocumentBase> Flux<T> findAll(Class<T> entityType) {
         return select(String.format("select from %s", getDocumentTypeNameForEntityType(entityType)), entityType);
     }
 
+    @Override
     public <E extends EdgeBase, F extends VertexBase, T extends VertexBase> Mono<E> createEdge(F from, T to,
-                                                                                               Class<E> edge) {
+            Class<E> edge) {
         Assert.notNull(from, "From vertex must not be empty");
         Assert.notNull(from.getRid(), "From vertex must have a non-empty @rid");
         Assert.notNull(to, "To vertex must not be empty");
@@ -265,102 +299,187 @@ public class ArcadedbTemplate implements GenericOperations, BasicOperations, Con
                 .map(item -> convertMapToObject(edge, item));
     }
 
+    @Override
     public <F extends VertexBase> Flux<VertexBase> outVertices(F from) {
-        return command(String.format("select out() from %s", getDocumentTypeNameForEntityType(from.getClass())))
-                .flatMap(result -> Flux.fromIterable((Iterable) result.get("out()")))
-                .map(item -> (VertexBase)convertMapToObject((Map) item));
+        return convertFluxOfMapToFluxOfVertex(
+                command(String.format("select out() as item from %s",
+                        getDocumentTypeNameForEntityType(from.getClass()))));
     }
 
+    @Override
+    public Flux<String> outVertexIds(String fromDocumentTypeName) {
+        return convertFluxOfMapToFluxOfRid(
+                command(String.format("select out().@rid as item from %s unwind item", fromDocumentTypeName)));
+    }
+
+    @Override
     public <F extends VertexBase, E extends EdgeBase> Flux<VertexBase> outVertices(F from, Class<E> edgeType) {
         var edgeDocumentName = getDocumentTypeNameForEntityType(edgeType);
-        return command(String.format("select out(%s) from %s", edgeDocumentName,
-                getDocumentTypeNameForEntityType(from.getClass())))
-                .flatMap(result -> Flux.fromIterable((Iterable) result.get(String.format("out(%s)", edgeDocumentName))))
-                .map(item -> (VertexBase) convertMapToObject((Map) item));
+        return convertFluxOfMapToFluxOfVertex(
+                command(String.format("select out(%s) as item from %s", edgeDocumentName,
+                        getDocumentTypeNameForEntityType(from.getClass()))));
     }
 
+    @Override
+    public Flux<String> outVertexIds(String fromDocumentTypeName, String edgeDocumentName) {
+        return convertFluxOfMapToFluxOfRid(
+                command(String.format("select out(%s).@rid as item from %s unwind item", edgeDocumentName, fromDocumentTypeName)));
+    }
+
+    @Override
     public <F extends VertexBase> Flux<EdgeBase> outEdges(F from) {
-        return null;
+        return convertFluxOfMapToFluxOfEdge(
+                command(String.format("select outE() as item from %s",
+                        getDocumentTypeNameForEntityType(from.getClass()))));
     }
 
-    public <F extends VertexBase, E extends EdgeBase> Flux<E> outEdges(F from, Class<E> edgeType) {
-        return null;
+    @Override
+    public Flux<String> outEdgesIds(String fromDocumentTypeName) {
+        return convertFluxOfMapToFluxOfRid(
+                command(String.format("select outE().@rid as item from %s unwind item",
+                        fromDocumentTypeName)));
     }
 
+    @Override
+    public <F extends VertexBase, E extends EdgeBase> Flux<EdgeBase> outEdges(F from, Class<E> edgeType) {
+        return convertFluxOfMapToFluxOfEdge(
+                command(String.format("select outE() as item from %s",
+                        getDocumentTypeNameForEntityType(from.getClass()))));
+    }
+
+    @Override
+    public Flux<String> outEdgesIds(String fromDocumentTypeName, String edgeDocumentName) {
+        return convertFluxOfMapToFluxOfRid(
+                command(String.format("select outE(%s).@rid as item from %s unwind item",
+                        edgeDocumentName, fromDocumentTypeName)));
+    }
+
+    @Override
     public <T extends VertexBase> Flux<VertexBase> inVertices(T to) {
         return null;
     }
 
+    @Override
     public <T extends VertexBase, E extends EdgeBase> Flux<VertexBase> inVertices(T to, Class<E> edgeType) {
         return null;
     }
 
+    @Override
     public <T extends VertexBase> Flux<EdgeBase> inEdges(T to) {
         return null;
     }
 
-    public <T extends VertexBase, E extends EdgeBase> Flux<E> inEdges(T to, Class<E> edgeType) {
+    @Override
+    public <T extends VertexBase, E extends EdgeBase> Flux<EdgeBase> inEdges(T to, Class<E> edgeType) {
         return null;
     }
 
+    @Override
     public <V extends VertexBase> Flux<VertexBase> bothVertices(V vertex) {
         return null;
     }
 
+    @Override
     public <V extends VertexBase, E extends EdgeBase> Flux<VertexBase> bothVertices(V vertex, Class<E> edgeType) {
         return null;
     }
 
+    @Override
     public <V extends VertexBase> Flux<EdgeBase> bothEdges(V vertex) {
         return null;
     }
 
-    public <V extends VertexBase, E extends EdgeBase> Flux<E> bothEdges(V vertex, Class<E> edgeType) {
+    @Override
+    public <V extends VertexBase, E extends EdgeBase> Flux<EdgeBase> bothEdges(V vertex, Class<E> edgeType) {
         return null;
     }
 
-
+    @Override
     public String convertObjectToJsonString(Object object) {
         var buffer = new StringBuffer();
         getEntityConverter().write(object, buffer);
         return buffer.toString();
     }
 
+    @Override
     public <T> T convertMapToObject(Class<T> entityType, Map<String, Object> item) {
         return getEntityConverter().read(entityType, item);
     }
 
+    @Override
     public <T extends DocumentBase> T convertMapToObject(Map<String, Object> item) {
-        var documentTypeName = (String) ((Map) item).get("@type");
-        var clazz = (Class<T>) getEntityTypeForDocumentTypeName(documentTypeName);
-        return (T) convertMapToObject(clazz, (Map) item);
+        var documentTypeName = (String) (item).get("@type");
+        var clazz = getEntityTypeForDocumentTypeName(documentTypeName);
+        return (T) convertMapToObject(clazz, item);
     }
 
+    @Override
     public <E extends DocumentBase> String getDocumentTypeNameForEntity(E entity) {
         return getDocumentTypeNameForEntityType(entity.getClass());
     }
 
+    @Override
     public <E extends DocumentBase> String getDocumentTypeNameForEntityType(Class<E> entityType) {
         return getEntityConverter().getMappingContext().getRequiredPersistentEntity(entityType).getDocumentType();
     }
 
+    @Override
     public Class<?> getEntityTypeForDocumentTypeName(String documentTypeName) {
         return ((ArcadeclientMappingContext) getEntityConverter().getMappingContext())
                 .getPersistentEntityForDocumentType(documentTypeName)
                 .getType();
     }
 
-    /* TransactionalOperations */
-
-    public Mono<EmptyResponse> commit() {
-        return new CommitTAExchange(getDatabaseName(), getWebClient()).exchange();
+    private <F extends VertexBase, E extends EdgeBase> Flux<VertexBase> convertFluxOfMapToFluxOfVertex(
+            Flux<Map<String, Object>> flux) {
+        return flux.flatMap(result -> {
+            var out = result.get("item");
+            if (out instanceof Iterable) {
+                return Flux.fromIterable((Iterable<?>) out);
+            }
+            return Flux.empty();
+        })
+                .map(item -> {
+                    if (item instanceof Map<?,?>) {
+                        var convertedItem = convertMapToObject((Map<String, Object>) item);
+                        if (convertedItem instanceof VertexBase) {
+                            return (VertexBase) convertedItem;
+                        }
+                        return null;
+                    } else {
+                        return null;
+                    }
+                });
     }
 
-    public Mono<EmptyResponse> rollback() {
-        return new RollbackTAExchange(getDatabaseName(), getWebClient()).exchange();
-    }
+    private <F extends VertexBase, E extends EdgeBase> Flux<EdgeBase> convertFluxOfMapToFluxOfEdge(
+        Flux<Map<String, Object>> flux) {
+    return flux.flatMap(result -> {
+        var out = result.get("item");
+        if (out instanceof Iterable) {
+            return Flux.fromIterable((Iterable<?>) out);
+        }
+        return Flux.empty();
+    })
+            .map(item -> {
+                if (item instanceof Map) {
+                    var convertedItem = convertMapToObject((Map<String, Object>) item);
+                    if (convertedItem instanceof EdgeBase) {
+                        return (EdgeBase) convertedItem;
+                    }
+                    return null;
+                } else {
+                    return null;
+                }
+            });
+}
 
-    public void close() throws Exception {
-        commit().onErrorResume(ex -> rollback());
+    private Flux<String> convertFluxOfMapToFluxOfRid(Flux<Map<String, Object>> flux) {
+        return flux.map(item -> {
+            if (item instanceof Map<?,?>) {
+                return (String) item.get("item");
+            }
+            return null;
+        });
     }
 }

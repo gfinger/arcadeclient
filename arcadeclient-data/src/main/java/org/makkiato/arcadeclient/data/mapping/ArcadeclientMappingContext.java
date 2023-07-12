@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ArcadeclientMappingContext extends AbstractMappingContext<ArcadeclientPersistentEntity<?>,
         ArcadeclientPersistentProperty> {
-    private ConcurrentHashMap<String, ArcadeclientPersistentEntity<?>> persistentEntities = new ConcurrentHashMap();
+    private ConcurrentHashMap<String, ArcadeclientPersistentEntity<?>> persistentEntities = new ConcurrentHashMap<>();
 
     /**
      * Creates the concrete {@link PersistentEntity} instance.
@@ -23,7 +23,7 @@ public class ArcadeclientMappingContext extends AbstractMappingContext<Arcadecli
      */
     @Override
     protected <T> ArcadeclientPersistentEntity<?> createPersistentEntity(TypeInformation<T> typeInformation) {
-        return new BasicArcadeclientPersistentEntity(typeInformation) {
+        return new BasicArcadeclientPersistentEntity<>(typeInformation) {
         };
     }
 

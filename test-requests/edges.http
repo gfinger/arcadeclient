@@ -1,0 +1,149 @@
+# @name exists
+GET http://{{host}}:{{port}}/{{api}}/exists/{{db}}
+Authorization: Basic {{user}} {{password}}
+###
+POST http://{{host}}:{{port}}/{{api}}/server
+Authorization: Basic {{user}} {{password}}
+Content-Type: application/json
+
+{
+   "command": "create database {{db}}" 
+}
+
+HTTP/1.1 200  - OK
+connection: close
+content-type: application/json
+content-length: 18
+date: Thu, 27 Apr 2023 10:05:39 GMT
+###
+POST http://{{host}}:{{port}}/{{api}}/command/{{db}}
+Authorization: Basic {{user}} {{password}}
+Content-Type: application/json
+
+{
+    "language" : "sqlscript",
+    "command": "create document type Address if not exists;\
+                create property Address.city if not exists string;\
+                create vertex type Kunde if not exists;\
+                create property Kunde.name if not exists string;\
+                create property Kunde.address if not exists embedded;\
+                create vertex type Person if not exists;\
+                create property Person.name if not exists string;\
+                create edge type IsContactOf if not exists;"
+}
+
+HTTP/1.1 200  - OK
+connection: close
+content-type: application/json
+content-length: 142
+date: Thu, 27 Apr 2023 10:05:53 GMT
+###
+POST http://{{host}}:{{port}}/{{api}}/command/{{db}}
+Authorization: Basic {{user}} {{password}}
+Content-Type: application/json
+
+{
+    "language": "sqlscript",
+    "command": "delete from Kunde;delete from Person;\
+                create vertex Kunde content {\"name\": \"Happy Garden\", \"address\": {\"street\": \"Flower Road\", \"@type\": \"Address\"}};\
+                create vertex Person content {\"name\": \"Clint\"};\
+                create vertex Person content {\"name\": \"Robert\"};\
+                create edge IsContactOf from (Select from Person where name = 'Clint') to (Select from Kunde where name = 'Happy Garden');\
+                create edge IsContactOf from (Select from Person where name = 'Robert') to (Select from Kunde where name = 'Happy Garden')"
+}
+
+HTTP/1.1 200  - OK
+connection: close
+content-type: application/json
+content-length: 220
+date: Thu, 27 Apr 2023 10:06:02 GMT
+###
+POST http://{{host}}:{{port}}/{{api}}/command/{{db}}
+Authorization: Basic {{user}} {{password}}
+Content-Type: application/json
+
+{
+    "language": "sql",
+    "command": "select outE() as item from Person"
+}
+
+HTTP/1.1 200  - OK
+connection: close
+content-type: application/json
+content-length: 321
+date: Thu, 27 Apr 2023 10:06:10 GMT
+###
+POST http://{{host}}:{{port}}/{{api}}/command/{{db}}
+Authorization: Basic {{user}} {{password}}
+Content-Type: application/json
+
+{
+    "language": "sql",
+    "command": "select out(IsContactOf) as item from Person"
+}
+
+HTTP/1.1 200  - OK
+connection: close
+content-type: application/json
+content-length: 423
+date: Thu, 27 Apr 2023 10:06:15 GMT
+###
+POST http://{{host}}:{{port}}/{{api}}/command/test-edge-operations
+Authorization: Basic {{user}} {{password}}
+Content-Type: application/json
+
+{
+    "language": "sql",
+    "command": "select out().@rid as item from Person unwind item"
+}
+
+HTTP/1.1 200  - OK
+connection: close
+content-type: application/json
+content-length: 173
+date: Fri, 28 Apr 2023 09:40:56 GMT
+###
+POST http://{{host}}:{{port}}/{{api}}/command/{{db}}
+Authorization: Basic {{user}} {{password}}
+Content-Type: application/json
+
+{
+    "language": "sql",
+    "command": "select from Person"
+}
+
+HTTP/1.1 200  - OK
+connection: close
+content-type: application/json
+content-length: 262
+date: Fri, 28 Apr 2023 09:27:29 GMT
+###
+POST http://{{host}}:{{port}}/{{api}}/command/{{db}}
+Authorization: Basic {{user}} {{password}}
+Content-Type: application/json
+
+{
+    "language": "sql",
+    "command": "select from Kunde"
+}
+
+HTTP/1.1 200  - OK
+connection: close
+content-type: application/json
+content-length: 260
+date: Fri, 28 Apr 2023 09:27:56 GMT
+###
+POST http://{{host}}:{{port}}/{{api}}/command/{{db}}
+Authorization: Basic {{user}} {{password}}
+Content-Type: application/json
+
+{
+    "language": "sql",
+    "command": "create edge IsContactOf from #57:0 to #33:0"
+}
+
+HTTP/1.1 200  - OK
+connection: close
+content-type: application/json
+content-length: 220
+date: Fri, 28 Apr 2023 09:29:02 GMT
