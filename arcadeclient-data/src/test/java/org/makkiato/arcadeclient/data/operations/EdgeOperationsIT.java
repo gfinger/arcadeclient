@@ -62,9 +62,10 @@ public class EdgeOperationsIT {
                                 .map(person -> person.get("@rid")).cast(String.class))
                         .flatMap(tuple -> {
                             return Flux.concat(
-                                operations.command(String.format("create edge IsContactOf from %s to %s", tuple.getT2(), tuple.getT1())),
-                                operations.command(String.format("create edge IsContactOf from %s to %s", tuple.getT3(), tuple.getT1()))
-                            );
+                                    operations.command(String.format("create edge IsContactOf from %s to %s",
+                                            tuple.getT2(), tuple.getT1())),
+                                    operations.command(String.format("create edge IsContactOf from %s to %s",
+                                            tuple.getT3(), tuple.getT1())));
                         }))
                 .blockLast();
     }
@@ -102,7 +103,7 @@ public class EdgeOperationsIT {
         void outVertexIds() {
             StepVerifier.create(operations.outVertexIds("Person").collectList())
                     .expectNextMatches(ids -> ids.stream()
-                    .allMatch(null))
+                            .allMatch(id -> id != null))
                     .verifyComplete();
         }
     }

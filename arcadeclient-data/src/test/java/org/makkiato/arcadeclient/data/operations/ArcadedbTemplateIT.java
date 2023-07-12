@@ -334,16 +334,16 @@ public class ArcadedbTemplateIT {
     void transactional() throws Exception {
         try (var taConnection = template.transactional()) {
             StepVerifier
-                    .create(taConnection.command("create vertex type Customer if not exists")
-                            .concatWith(taConnection.command("drop type Customer unsafe"))
-                            .concatWith(taConnection.command("create vertex type Customer"))
-                            .concatWith(taConnection.command("insert into Customer set name = 'Tester'")))
+                    .create(taConnection.command("create vertex type Contact if not exists")
+                            .concatWith(taConnection.command("drop type Contact unsafe"))
+                            .concatWith(taConnection.command("create vertex type Contact"))
+                            .concatWith(taConnection.command("insert into Contact set name = 'Tester'")))
                     .expectNextMatches(result -> result.entrySet().contains(entry("operation", "create vertex type")))
                     .expectNextMatches(result -> result.entrySet().contains(entry("operation", "drop type")))
                     .expectNextMatches(result -> result.entrySet().contains(entry("operation", "create vertex type"))
-                            && result.entrySet().contains(entry("typeName", "Customer")))
+                            && result.entrySet().contains(entry("typeName", "Contact")))
                     .expectNextMatches(result -> result.entrySet().contains(entry("name", "Tester"))
-                            && result.entrySet().contains(entry("@type", "Customer")))
+                            && result.entrySet().contains(entry("@type", "Contact")))
                     .verifyComplete();
         }
     }
