@@ -1,0 +1,8 @@
+GET http://{{host}}:{{port}}/{{api}}/server?mode=default
+Authorization: Basic {{user}} {{password}}
+
+HTTP/1.1 200  - OK
+connection: close
+content-type: application/json
+content-length: 11081
+date: Mon, 24 Jul 2023 09:07:43 GMT

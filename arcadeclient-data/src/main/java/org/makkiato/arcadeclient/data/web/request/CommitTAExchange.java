@@ -17,7 +17,7 @@ public class CommitTAExchange implements Exchange<EmptyResponse> {
     @Override
     public Mono<EmptyResponse> exchange() {
         return webClient.post()
-                .uri(String.format("%s/%s", Exchange.BASEURL_BEGIN, name))
+                .uri(String.format("%s/%s", Exchange.BASEURL_COMMIT, name))
                 .exchangeToMono(response -> {
                     if (response.statusCode().equals(HttpStatus.NO_CONTENT)) {
                         return Mono.just(new EmptyResponse(null));

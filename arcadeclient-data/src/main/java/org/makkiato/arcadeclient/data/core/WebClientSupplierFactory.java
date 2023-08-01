@@ -1,7 +1,6 @@
 package org.makkiato.arcadeclient.data.core;
 
-import org.makkiato.arcadeclient.data.core.ArcadedbProperties.ConnectionProperties;
-import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilter;
+import org.makkiato.arcadeclient.data.web.ArcadeclientErrorResponseFilter;
 import org.makkiato.arcadeclient.data.web.client.WebClientSpec;
 import org.makkiato.arcadeclient.data.web.client.WebClientSupplier;
 import org.makkiato.arcadeclient.data.web.client.WebClientSupplierStrategy;
@@ -18,19 +17,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-public class WebClientFactory {
+public class WebClientSupplierFactory {
     private static final String PATH_SEGMENT_API = "/api";
     private static final String PATH_SEGMENT_VERSION = "/v1";
     private static final String SCHEME_HTTP = "http";
-    private final ArcadedbErrorResponseFilter arcadedbErrorResponseFilter;
+    private final ArcadeclientErrorResponseFilter arcadedbErrorResponseFilter;
     private final WebClientSupplierStrategy webClientSupplierStrategy;
 
-    public WebClientFactory(ArcadedbErrorResponseFilter arcadedbErrorResponseFilter, WebClientSupplierStrategy webClientSupplierStrategy) {
+    public WebClientSupplierFactory(ArcadeclientErrorResponseFilter arcadedbErrorResponseFilter, WebClientSupplierStrategy webClientSupplierStrategy) {
         this.arcadedbErrorResponseFilter = arcadedbErrorResponseFilter;
         this.webClientSupplierStrategy = webClientSupplierStrategy;
     }
 
-    @Cacheable(value = "server-info")
+    // TODO: The serverInfo shouldn't be retrieved by the WebClientFactory
     public Optional<ServerInfoResponse> serverInfo(ConnectionProperties connectionProperties, String mode) {
         var webClient = createWebClientFor(connectionProperties.getHost(), connectionProperties.getPort(),
                 connectionProperties.getUsername(), connectionProperties.getPassword());

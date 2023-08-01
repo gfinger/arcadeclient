@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.makkiato.arcadeclient.data.exception.server.IllegalArgumentException;
-import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilterImpl;
+import org.makkiato.arcadeclient.data.web.ArcadeclientErrorResponseFilterImpl;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
@@ -27,16 +27,16 @@ import ch.qos.logback.core.read.ListAppender;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ArcadedbFactoryIT {
     @Autowired
-    private ArcadedbProperties arcadedbProperties;
+    private ConnectionProperties arcadedbProperties;
     @Autowired
-    private WebClientFactory webClientFactory;
+    private WebClientSupplierFactory webClientFactory;
 
-    private ArcadedbFactory arcadedbFactory;
+    private Arcadeclient arcadedbFactory;
     private ListAppender<ILoggingEvent> logWatcher;
 
     @BeforeAll
     void init() {
-        arcadedbFactory = new ArcadedbFactory(webClientFactory,
+        arcadedbFactory = new Arcadeclient(webClientFactory,
                 arcadedbProperties.getConnectionPropertiesFor("default"));
     }
 
@@ -51,7 +51,7 @@ class ArcadedbFactoryIT {
     void initEach() {
         logWatcher = new ListAppender<>();
         logWatcher.start();
-        ((Logger) LoggerFactory.getLogger(ArcadedbErrorResponseFilterImpl.class)).addAppender(logWatcher);
+        ((Logger) LoggerFactory.getLogger(ArcadeclientErrorResponseFilterImpl.class)).addAppender(logWatcher);
     }
 
     @Test

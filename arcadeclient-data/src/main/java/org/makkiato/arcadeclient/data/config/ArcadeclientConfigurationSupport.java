@@ -1,15 +1,20 @@
 package org.makkiato.arcadeclient.data.config;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.makkiato.arcadeclient.data.base.Document;
-import org.makkiato.arcadeclient.data.core.ArcadedbFactory;
-import org.makkiato.arcadeclient.data.core.ArcadedbProperties;
-import org.makkiato.arcadeclient.data.core.WebClientFactory;
+import org.makkiato.arcadeclient.data.core.Arcadeclient;
+import org.makkiato.arcadeclient.data.core.ConnectionProperties;
+import org.makkiato.arcadeclient.data.core.WebClientSupplierFactory;
 import org.makkiato.arcadeclient.data.mapping.ArcadeclientMappingContext;
 import org.makkiato.arcadeclient.data.mapping.MappingArcadeclientConverter;
 import org.makkiato.arcadeclient.data.operations.ArcadedbOperations;
 import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
-import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilter;
-import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilterImpl;
+import org.makkiato.arcadeclient.data.web.ArcadeclientErrorResponseFilter;
+import org.makkiato.arcadeclient.data.web.ArcadeclientErrorResponseFilterImpl;
 import org.makkiato.arcadeclient.data.web.client.HALeaderWebClientSupplierStrategy;
 import org.makkiato.arcadeclient.data.web.client.WebClientSupplierStrategy;
 import org.makkiato.arcadeclient.data.web.request.ExchangeFactory;
@@ -19,11 +24,6 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 public abstract class ArcadeclientConfigurationSupport {
     protected Collection<String> getMappingBasePackages() {
@@ -59,22 +59,6 @@ public abstract class ArcadeclientConfigurationSupport {
     }
 
     @Bean
-    public ArcadedbErrorResponseFilter arcadedbErrorResponseFilter() {
-        return new ArcadedbErrorResponseFilterImpl();
-    }
-
-    @Bean
-    public WebClientSupplierStrategy webClientSupplierStrategy() {
-        return new HALeaderWebClientSupplierStrategy();
-    }
-
-    @Bean
-    public WebClientFactory webClientFactory(ArcadedbErrorResponseFilter arcadedbErrorResponseFilter,
-                                              WebClientSupplierStrategy webClientSupplierStrategy) {
-        return new WebClientFactory(arcadedbErrorResponseFilter, webClientSupplierStrategy);
-    }
-
-    @Bean
     public ArcadeclientMappingContext arcadeclientMappingContext(ArcadeclientManagedTypes managedTypes) {
         var mappingContext = new ArcadeclientMappingContext();
         mappingContext.setManagedTypes(managedTypes);
@@ -87,8 +71,25 @@ public abstract class ArcadeclientConfigurationSupport {
     }
 
     @Bean
-    public ArcadedbFactory arcadedbFactory(ArcadedbProperties properties, WebClientFactory webClientFactory) {
-        return new ArcadedbFactory(webClientFactory, properties.getConnectionPropertiesFor(null));
+    public ArcadeclientErrorResponseFilter arcadedbErrorResponseFilter() {
+        return new ArcadeclientErrorResponseFilterImpl();
+    }
+
+    @Bean
+    public WebClientSupplierStrategy webClientSupplierStrategy() {
+        return new HALeaderWebClientSupplierStrategy();
+    }
+
+    @Bean
+    public WebClientSupplierFactory webClientFactory(ArcadeclientErrorResponseFilter arcadedbErrorResponseFilter,
+            WebClientSupplierStrategy webClientSupplierStrategy) {
+        return new WebClientSupplierFactory(arcadedbErrorResponseFilter, webClientSupplierStrategy);
+    }
+
+    @Bean
+    public Arcadeclient arcadedbFactory(WebClientSupplierFactory webClientFactory,
+            ConnectionProperties connectionProperties) {
+        return new Arcadeclient(webClientFactory.getWebClientSupplierFor(connectionProperties));
     }
 
     @Bean
@@ -97,11 +98,9 @@ public abstract class ArcadeclientConfigurationSupport {
     }
 
     @Bean
-    public ArcadedbOperations arcadedbOperations(ArcadedbProperties properties, WebClientFactory webClientFactory,
-                                                  ArcadeclientMappingContext arcadeclientMappingContext, ExchangeFactory exchangeFactory) {
-        var connectionProperties = properties.getConnectionPropertiesFor(null);
-        return new ArcadedbTemplate(connectionProperties.getDatabase(),
-                webClientFactory.getWebClientSupplierFor(connectionProperties).get(),
+    public ArcadedbOperations arcadedbOperations(Arcadeclient arcadeclientFactory,
+            ArcadeclientMappingContext arcadeclientMappingContext, ExchangeFactory exchangeFactory) {
+        return new ArcadedbTemplate(arcadeclientFactory,
                 new MappingArcadeclientConverter(arcadeclientMappingContext) {
                 },
                 exchangeFactory);

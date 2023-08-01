@@ -13,9 +13,9 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.makkiato.arcadeclient.data.core.ArcadedbFactory;
+import org.makkiato.arcadeclient.data.core.Arcadeclient;
 import org.makkiato.arcadeclient.data.core.TestConfiguration;
-import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilterImpl;
+import org.makkiato.arcadeclient.data.web.ArcadeclientErrorResponseFilterImpl;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,7 +31,7 @@ import ch.qos.logback.core.read.ListAppender;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class GraphMappingIT {
     @Autowired
-    private ArcadedbFactory arcadedbFactory;
+    private Arcadeclient arcadedbFactory;
     @Autowired
     private ArcadedbTemplate connection;
 
@@ -68,7 +68,7 @@ public class GraphMappingIT {
     void initEach() {
         logWatcher = new ListAppender<>();
         logWatcher.start();
-        ((Logger) LoggerFactory.getLogger(ArcadedbErrorResponseFilterImpl.class)).addAppender(logWatcher);
+        ((Logger) LoggerFactory.getLogger(ArcadeclientErrorResponseFilterImpl.class)).addAppender(logWatcher);
     }
 
     @AfterAll

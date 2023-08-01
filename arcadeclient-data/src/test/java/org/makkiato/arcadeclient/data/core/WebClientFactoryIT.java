@@ -12,9 +12,9 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 @SpringJUnitConfig(TestConfiguration.class)
 class WebClientFactoryIT {
     @Autowired
-    private WebClientFactory arcadedbClient;
+    private WebClientSupplierFactory arcadedbClient;
     @Autowired
-    private ArcadedbProperties arcadedbProperties;
+    private ConnectionProperties arcadedbProperties;
 
     @Test
     void serverInfo() {

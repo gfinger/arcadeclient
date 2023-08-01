@@ -17,14 +17,14 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.makkiato.arcadeclient.data.core.ArcadedbFactory;
+import org.makkiato.arcadeclient.data.core.Arcadeclient;
 import org.makkiato.arcadeclient.data.exception.server.CommandExecutionException;
 import org.makkiato.arcadeclient.data.exception.server.DuplicatedKeyException;
 import org.makkiato.arcadeclient.data.exception.server.IllegalArgumentException;
 import org.makkiato.arcadeclient.data.exception.server.ParseException;
 import org.makkiato.arcadeclient.data.exception.server.SchemaException;
 import org.makkiato.arcadeclient.data.exception.server.ValidationException;
-import org.makkiato.arcadeclient.data.web.ArcadedbErrorResponseFilterImpl;
+import org.makkiato.arcadeclient.data.web.ArcadeclientErrorResponseFilterImpl;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,7 +43,7 @@ import reactor.test.StepVerifier;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ArcadedbTemplateIT {
     @Autowired
-    private ArcadedbFactory arcadedbFactory;
+    private Arcadeclient arcadedbFactory;
 
     @Autowired
     private ArcadedbTemplate template;
@@ -62,7 +62,7 @@ public class ArcadedbTemplateIT {
     void initEach() {
         logWatcher = new ListAppender<>();
         logWatcher.start();
-        ((Logger) LoggerFactory.getLogger(ArcadedbErrorResponseFilterImpl.class)).addAppender(logWatcher);
+        ((Logger) LoggerFactory.getLogger(ArcadeclientErrorResponseFilterImpl.class)).addAppender(logWatcher);
     }
 
     @AfterAll

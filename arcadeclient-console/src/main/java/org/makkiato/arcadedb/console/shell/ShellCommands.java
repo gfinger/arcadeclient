@@ -1,8 +1,8 @@
 package org.makkiato.arcadedb.console.shell;
 
-import org.makkiato.arcadeclient.data.core.ArcadedbFactory;
-import org.makkiato.arcadeclient.data.core.ArcadedbProperties;
-import org.makkiato.arcadeclient.data.core.WebClientFactory;
+import org.makkiato.arcadeclient.data.core.Arcadeclient;
+import org.makkiato.arcadeclient.data.core.ConnectionProperties;
+import org.makkiato.arcadeclient.data.core.WebClientSupplierFactory;
 import org.makkiato.arcadeclient.data.exception.client.ArcadeClientConfigurationException;
 import org.makkiato.arcadeclient.data.operations.ArcadedbTemplate;
 import org.springframework.context.ApplicationEventPublisher;
@@ -26,12 +26,12 @@ import java.util.stream.Collectors;
 public class ShellCommands extends AbstractShellComponent {
     private static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(2);
     private final ApplicationEventPublisher publisher;
-    private ArcadedbFactory arcadedbFactory;
+    private Arcadeclient arcadedbFactory;
     private ArcadedbTemplate connection = null;
-    private ArcadedbProperties arcadedbProperties;
-    private WebClientFactory arcadedbClient;
+    private ConnectionProperties arcadedbProperties;
+    private WebClientSupplierFactory arcadedbClient;
 
-    public ShellCommands(ArcadedbProperties arcadedbProperties, ArcadedbFactory arcadedbFactory, WebClientFactory arcadedbClient,
+    public ShellCommands(ConnectionProperties arcadedbProperties, Arcadeclient arcadedbFactory, WebClientSupplierFactory arcadedbClient,
             ApplicationEventPublisher publisher) {
         this.arcadedbProperties = arcadedbProperties;
         this.arcadedbFactory = arcadedbFactory;
@@ -50,7 +50,7 @@ public class ShellCommands extends AbstractShellComponent {
         var context = component.run(SingleItemSelector.SingleItemSelectorContext.empty());
         context.getResultItem().map(Itemable::getItem).ifPresent(serverName -> {
             try {
-                setArcadedbFactory(new ArcadedbFactory(arcadedbClient, connectionProperties.get(serverName)),
+                setArcadedbFactory(new Arcadeclient(arcadedbClient, connectionProperties.get(serverName)),
                         serverName);
             } catch (ArcadeClientConfigurationException e) {
                 setArcadedbFactory(null, null);
@@ -146,11 +146,11 @@ public class ShellCommands extends AbstractShellComponent {
                 .publishEvent(new DatabaseUpdateEvent(this, null));
     }
 
-    public ArcadedbFactory getArcadedbFactory() {
+    public Arcadeclient getArcadedbFactory() {
         return arcadedbFactory;
     }
 
-    public void setArcadedbFactory(ArcadedbFactory arcadedbFactory, String configurationName) {
+    public void setArcadedbFactory(Arcadeclient arcadedbFactory, String configurationName) {
         this.arcadedbFactory = arcadedbFactory;
         getPublisher().publishEvent(new ServerUpdateEvent(this, configurationName));
     }

@@ -25,11 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 @Slf4j
-public class ArcadedbErrorResponseFilterImpl implements ArcadedbErrorResponseFilter {
+public class ArcadeclientErrorResponseFilterImpl implements ArcadeclientErrorResponseFilter {
 
     @Override
     public Mono<ClientResponse> filter(ClientRequest request, ExchangeFunction next) {
-        return next.exchange(request).flatMap(ArcadedbErrorResponseFilterImpl::exchangeFilterResponseProcessor);
+        return next.exchange(request).flatMap(ArcadeclientErrorResponseFilterImpl::exchangeFilterResponseProcessor);
     }
 
     private static Mono<ClientResponse> exchangeFilterResponseProcessor(ClientResponse response) {
