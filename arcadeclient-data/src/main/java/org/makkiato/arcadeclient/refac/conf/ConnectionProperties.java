@@ -1,4 +1,4 @@
-package org.makkiato.arca.declient.data.core;
+package org.makkiato.arcadeclient.refac.conf;
 
 import java.time.Duration;
 
@@ -6,7 +6,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import org.springframework.stereotype.Component;
 
+@Component
 @ConfigurationProperties(prefix = "org.makkiato.arcadedb")
 @Data
 public class ConnectionProperties {
@@ -38,7 +40,7 @@ public class ConnectionProperties {
     @NotBlank
     private String password;
     /**
-     * Name of defualt database
+     * Name of default database
      */
     @NotBlank
     private String database;
